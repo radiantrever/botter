@@ -32,7 +32,7 @@ export class CreatorService {
         if (!creator) throw new Error("Creator not found");
 
         // Check if channel already exists
-        let channel = await channelRepo.findByTelegramId(channelTelegramId);
+        const channel = await channelRepo.findByTelegramId(channelTelegramId);
         if (channel) {
             if (channel.creatorId !== creator.id) throw new Error("Channel already registered by another creator");
             return channel;

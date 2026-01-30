@@ -82,7 +82,7 @@ async function sendReminders(days: number, translationKey: "reminder_1d" | "remi
 }
 
 // Optional: BullMQ Worker if infrastructure is available
-export const expirationWorker = new Worker('expiration-queue', async (job) => {
+export const expirationWorker = new Worker('expiration-queue', async (_job) => {
     await checkExpirations();
 }, {
     connection: {

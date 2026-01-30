@@ -26,7 +26,7 @@ export async function i18nMiddleware(ctx: MyContext, next: NextFunction) {
 
 // Type extension for ease of use in handlers (optional but helpful)
 export interface I18nFlavor {
-    t: (key: string, params?: Record<string, any>) => string;
+    t: (_key: string, _params?: Record<string, any>) => string;
 }
 
 export type MyContextWithI18n = MyContext & I18nFlavor;
