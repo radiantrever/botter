@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
     "start": "ts-node src/index.ts",
-    "build": "tsc",
+    "build": "dotenv -e .env -- tsc",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "format": "prettier --write \"src/**/*.ts\"",
@@ -41,6 +41,7 @@
     "@types/jest": "^29.5.12",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.29.1",
