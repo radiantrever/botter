@@ -1,0 +1,12 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = "postgresql://admin:password@localhost:5432/botter_db?schema=public"
+}
+
+model User {
+  id Int @id
+}

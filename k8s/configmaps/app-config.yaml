@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: botter-config
+  namespace: botter
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  DATABASE_URL: "postgresql://botter_user:$(POSTGRES_PASSWORD)@botter-db:5432/botter_db"
+  REDIS_URL: "redis://botter-redis:6379"
+  LOG_LEVEL: "info"

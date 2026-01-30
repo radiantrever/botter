@@ -1,0 +1,816 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Telegram Paywall Platform API",
+    "description": "API documentation for the Telegram Paywall Platform - A comprehensive subscription management system for Telegram channels",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Development Team",
+      "email": "support@botter.example.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://your-domain.com/api/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "http://localhost:3000/api/v1",
+      "description": "Development server"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Internal user ID"
+          },
+          "telegramId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Telegram User ID"
+          },
+          "username": {
+            "type": "string",
+            "nullable": true,
+            "description": "Telegram username"
+          },
+          "firstName": {
+            "type": "string",
+            "nullable": true,
+            "description": "User's first name"
+          },
+          "lastName": {
+            "type": "string",
+            "nullable": true,
+            "description": "User's last name"
+          },
+          "language": {
+            "type": "string",
+            "enum": ["en", "uz", "ru"],
+            "default": "en",
+            "description": "User's preferred language"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Account creation timestamp"
+          }
+        },
+        "required": ["id", "telegramId", "createdAt"]
+      },
+      "Creator": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Creator ID"
+          },
+          "userId": {
+            "type": "integer",
+            "description": "Associated user ID"
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Channel"
+            },
+            "description": "List of channels managed by this creator"
+          },
+          "balance": {
+            "$ref": "#/components/schemas/CreatorBalance"
+          }
+        },
+        "required": ["id", "userId"]
+      },
+      "Channel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Channel ID"
+          },
+          "telegramChannelId": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Telegram Channel ID"
+          },
+          "title": {
+            "type": "string",
+            "description": "Channel title"
+          },
+          "creatorId": {
+            "type": "integer",
+            "description": "ID of the creator who owns this channel"
+          },
+          "commissionRate": {
+            "type": "number",
+            "format": "float",
+            "default": 0.05,
+            "description": "Platform commission rate (5%)"
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriptionPlan"
+            },
+            "description": "Available subscription plans"
+          }
+        },
+        "required": ["id", "telegramChannelId", "title", "creatorId"]
+      },
+      "SubscriptionPlan": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Plan ID"
+          },
+          "channelId": {
+            "type": "integer",
+            "description": "Associated channel ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "Plan name (e.g., 'Monthly Access')"
+          },
+          "price": {
+            "type": "integer",
+            "description": "Price in UZS"
+          },
+          "durationDay": {
+            "type": "integer",
+            "description": "Duration in days"
+          },
+          "isActive": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether plan is currently active"
+          }
+        },
+        "required": ["id", "channelId", "name", "price", "durationDay"]
+      },
+      "Subscription": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Subscription ID"
+          },
+          "userId": {
+            "type": "integer",
+            "description": "User ID"
+          },
+          "planId": {
+            "type": "integer",
+            "description": "Subscription plan ID"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["PENDING", "ACTIVE", "EXPIRED", "CANCELLED"],
+            "default": "PENDING",
+            "description": "Subscription status"
+          },
+          "paymentId": {
+            "type": "string",
+            "nullable": true,
+            "description": "TsPay transaction ID"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Subscription start date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Subscription end date"
+          },
+          "inviteLink": {
+            "type": "string",
+            "nullable": true,
+            "description": "Generated Telegram invite link"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Creation timestamp"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["id", "userId", "planId", "status", "createdAt", "updatedAt"]
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Transaction ID"
+          },
+          "subscriptionId": {
+            "type": "integer",
+            "description": "Associated subscription ID"
+          },
+          "grossAmount": {
+            "type": "integer",
+            "description": "Total amount paid by user"
+          },
+          "providerFee": {
+            "type": "integer",
+            "description": "Payment provider fee (TsPay 5%)"
+          },
+          "platformFee": {
+            "type": "integer",
+            "description": "Platform commission fee"
+          },
+          "creatorShare": {
+            "type": "integer",
+            "description": "Net amount to creator"
+          },
+          "currency": {
+            "type": "string",
+            "default": "UZS",
+            "description": "Currency code"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["COMPLETED", "REFUNDED", "FAILED"],
+            "description": "Transaction status"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Transaction timestamp"
+          }
+        },
+        "required": ["id", "subscriptionId", "grossAmount", "providerFee", "platformFee", "creatorShare", "status", "createdAt"]
+      },
+      "CreatorBalance": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Balance record ID"
+          },
+          "creatorId": {
+            "type": "integer",
+            "description": "Associated creator ID"
+          },
+          "availableBalance": {
+            "type": "integer",
+            "default": 0,
+            "description": "Available balance for withdrawal"
+          },
+          "pendingBalance": {
+            "type": "integer",
+            "default": 0,
+            "description": "Balance in holding period"
+          },
+          "totalPaidOut": {
+            "type": "integer",
+            "default": 0,
+            "description": "Total amount paid out to creator"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last update timestamp"
+          }
+        },
+        "required": ["id", "creatorId", "availableBalance", "pendingBalance", "totalPaidOut", "updatedAt"]
+      },
+      "Payout": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Payout request ID"
+          },
+          "creatorId": {
+            "type": "integer",
+            "description": "Requesting creator ID"
+          },
+          "amount": {
+            "type": "integer",
+            "description": "Requested payout amount"
+          },
+          "cardNumber": {
+            "type": "string",
+            "description": "Destination card number"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["REQUESTED", "PROCESSING", "PAID", "REJECTED"],
+            "description": "Payout status"
+          },
+          "requestedAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Request submission timestamp"
+          },
+          "processedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "Processing completion timestamp"
+          }
+        },
+        "required": ["id", "creatorId", "amount", "cardNumber", "status", "requestedAt"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Error occurrence timestamp"
+          }
+        },
+        "required": ["error", "timestamp"]
+      },
+      "HealthCheckResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["healthy", "unhealthy"],
+            "description": "Overall system health"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Health check timestamp"
+          },
+          "services": {
+            "type": "object",
+            "properties": {
+              "database": {
+                "type": "string",
+                "enum": ["healthy", "unhealthy"]
+              },
+              "redis": {
+                "type": "string",
+                "enum": ["healthy", "unhealthy"]
+              },
+              "tspay": {
+                "type": "string",
+                "enum": ["healthy", "unhealthy"]
+              }
+            }
+          }
+        },
+        "required": ["status", "timestamp", "services"]
+      }
+    },
+    "securitySchemes": {
+      "BotToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Telegram Bot Token for authentication"
+      }
+    }
+  },
+  "security": [
+    {
+      "BotToken": []
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "description": "Returns the current health status of all system services",
+        "tags": ["System"],
+        "responses": {
+          "200": {
+            "description": "System is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "System is unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/{telegramId}": {
+      "get": {
+        "summary": "Get user information",
+        "description": "Retrieve user details by Telegram ID",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "name": "telegramId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Telegram User ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creators/{telegramId}": {
+      "get": {
+        "summary": "Get creator information",
+        "description": "Retrieve creator details and associated channels",
+        "tags": ["Creators"],
+        "parameters": [
+          {
+            "name": "telegramId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "Telegram User ID of the creator"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Creator information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Creator"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Creator not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/channels/{channelId}": {
+      "get": {
+        "summary": "Get channel information",
+        "description": "Retrieve channel details and available subscription plans",
+        "tags": ["Channels"],
+        "parameters": [
+          {
+            "name": "channelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Channel ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Channel information retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Channel"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Channel not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subscriptions": {
+      "post": {
+        "summary": "Create subscription",
+        "description": "Create a new subscription for a user",
+        "tags": ["Subscriptions"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "integer",
+                    "description": "User ID"
+                  },
+                  "planId": {
+                    "type": "integer",
+                    "description": "Subscription plan ID"
+                  },
+                  "paymentId": {
+                    "type": "string",
+                    "description": "TsPay transaction ID"
+                  }
+                },
+                "required": ["userId", "planId", "paymentId"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Subscription created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Subscription"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/subscriptions/{id}/activate": {
+      "post": {
+        "summary": "Activate subscription",
+        "description": "Activate a pending subscription with start/end dates and invite link",
+        "tags": ["Subscriptions"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Subscription ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "startDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Subscription start date"
+                  },
+                  "endDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Subscription end date"
+                  },
+                  "inviteLink": {
+                    "type": "string",
+                    "description": "Telegram invite link"
+                  }
+                },
+                "required": ["startDate", "endDate", "inviteLink"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subscription activated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Subscription"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or subscription already active",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions": {
+      "post": {
+        "summary": "Record transaction",
+        "description": "Record a completed payment transaction",
+        "tags": ["Transactions"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subscriptionId": {
+                    "type": "integer",
+                    "description": "Associated subscription ID"
+                  },
+                  "grossAmount": {
+                    "type": "integer",
+                    "description": "Total amount paid"
+                  },
+                  "providerFee": {
+                    "type": "integer",
+                    "description": "Payment provider fee"
+                  },
+                  "platformFee": {
+                    "type": "integer",
+                    "description": "Platform commission"
+                  },
+                  "creatorShare": {
+                    "type": "integer",
+                    "description": "Amount for creator"
+                  }
+                },
+                "required": ["subscriptionId", "grossAmount", "providerFee", "platformFee", "creatorShare"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Transaction recorded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Transaction"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid transaction data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/payouts": {
+      "post": {
+        "summary": "Request payout",
+        "description": "Submit a payout request for a creator",
+        "tags": ["Payouts"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "creatorId": {
+                    "type": "integer",
+                    "description": "Creator ID"
+                  },
+                  "amount": {
+                    "type": "integer",
+                    "description": "Payout amount"
+                  },
+                  "cardNumber": {
+                    "type": "string",
+                    "description": "Destination card number"
+                  }
+                },
+                "required": ["creatorId", "amount", "cardNumber"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Payout request submitted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Payout"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid payout request or insufficient balance",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "System",
+      "description": "System health and monitoring endpoints"
+    },
+    {
+      "name": "Users",
+      "description": "User management and information"
+    },
+    {
+      "name": "Creators",
+      "description": "Creator profiles and management"
+    },
+    {
+      "name": "Channels",
+      "description": "Channel management and information"
+    },
+    {
+      "name": "Subscriptions",
+      "description": "Subscription lifecycle management"
+    },
+    {
+      "name": "Transactions",
+      "description": "Payment transaction recording"
+    },
+    {
+      "name": "Payouts",
+      "description": "Creator payout processing"
+    }
+  ]
+}

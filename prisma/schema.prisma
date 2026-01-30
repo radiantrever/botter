@@ -1,0 +1,154 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement()) // Internal ID, separate from Telegram ID
+  telegramId BigInt   @unique // Telegram User ID
+  username   String?
+  firstName  String?
+  lastName   String?
+  language   String?   @default("en")
+  createdAt  DateTime @default(now())
+
+  creator       Creator?
+  subscriptions Subscription[]
+  partnerAccess Partner[] // Tracks channels this user is a partner for
+}
+
+model Creator {
+  id             Int             @id @default(autoincrement())
+  userId         Int             @unique
+  user           User            @relation(fields: [userId], references: [id])
+  channels       Channel[]
+  
+  balance        CreatorBalance?
+  payouts        Payout[]
+}
+
+model Channel {
+  id                Int     @id @default(autoincrement())
+  telegramChannelId BigInt  @unique // The negative ID of the channel
+  title             String
+  creatorId         Int
+  creator           Creator @relation(fields: [creatorId], references: [id])
+  commissionRate    Float   @default(0.05) // Our platform fee (default 5%)
+
+  plans         SubscriptionPlan[]
+  subscriptions Subscription[]
+  partners      Partner[]
+}
+
+model Partner {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  user           User     @relation(fields: [userId], references: [id])
+  channelId      Int
+  channel        Channel  @relation(fields: [channelId], references: [id])
+  
+  commissionRate Float    @default(0.40) // 40% as requested
+  status         String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  createdAt      DateTime @default(now())
+
+  subscriptions  Subscription[]
+  transactions   Transaction[]
+
+  @@unique([userId, channelId])
+}
+
+model SubscriptionPlan {
+  id        Int     @id @default(autoincrement())
+  channelId Int
+  channel   Channel @relation(fields: [channelId], references: [id])
+
+  name        String // e.g., "Monthly Access"
+  price       Int // In UZS (Uzbek Soum)
+  durationDay Int // Duration in days
+  isActive    Boolean @default(true)
+
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id     Int              @id @default(autoincrement())
+  userId Int
+  user   User             @relation(fields: [userId], references: [id])
+  planId Int
+  plan   SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  status     String @default("PENDING")
+  paymentId  String? // TsPay transaction/cheque ID
+  startDate  DateTime? // Set upon activation
+  endDate    DateTime? // Set upon activation
+  inviteLink String? // The unique join link generated for this user
+  
+  partnerId  Int? // Link to the specific partner who referred this sub
+  partner    Partner? @relation(fields: [partnerId], references: [id])
+
+  reminded1d Boolean @default(false)
+  reminded3d Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Channel   Channel? @relation(fields: [channelId], references: [id])
+  channelId Int?
+  
+  transactions Transaction[]
+}
+
+model Transaction {
+  id             String       @id @default(uuid())
+  subscriptionId Int
+  subscription   Subscription @relation(fields: [subscriptionId], references: [id])
+
+  // Amounts in Smallest Unit (or Standard UZS)
+  grossAmount   Int // Total paid by user
+  providerFee   Int // TsPay 5%
+  platformFee   Int // Our share
+  partnerShare  Int @default(0) // The advertiser's cut
+  creatorShare  Int // Net for channel owner
+
+  partnerId     Int?
+  partner       Partner? @relation(fields: [partnerId], references: [id])
+
+  currency String @default("UZS")
+
+  status    String // "COMPLETED", "REFUNDED"
+  createdAt DateTime @default(now())
+
+  // Link to Payout?
+  payoutId Int?
+  payout   Payout? @relation(fields: [payoutId], references: [id])
+}
+
+model CreatorBalance {
+  id        Int     @id @default(autoincrement())
+  creatorId Int     @unique
+  creator   Creator @relation(fields: [creatorId], references: [id])
+
+  availableBalance Int @default(0) // Sum of earnings (both as Creator and Partner)
+  totalPaidOut     Int @default(0)
+
+  updatedAt DateTime @updatedAt
+}
+
+model Payout {
+  id        Int     @id @default(autoincrement())
+  creatorId Int
+  creator   Creator @relation(fields: [creatorId], references: [id])
+
+  amount      Int
+  cardNumber  String
+  status      String // "REQUESTED", "PROCESSING", "PAID", "REJECTED"
+  requestedAt DateTime  @default(now())
+  processedAt DateTime?
+
+  transactions Transaction[]
+}
+
+
