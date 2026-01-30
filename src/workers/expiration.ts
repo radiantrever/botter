@@ -1,4 +1,5 @@
 import { Worker } from 'bullmq';
+import IORedis from 'ioredis';
 import { SubscriptionRepository } from '../core/subscription.repo';
 import { bot } from '../bot/bot';
 import { Language, t } from '../bot/i18n';
@@ -105,16 +106,20 @@ async function sendReminders(
 }
 
 // Optional: BullMQ Worker if infrastructure is available
+const redisConnection = process.env.REDIS_URL
+  ? new IORedis(process.env.REDIS_URL)
+  : {
+      host: process.env.REDIS_HOST || '127.0.0.1',
+      port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    };
+
 export const expirationWorker = new Worker(
   'expiration-queue',
   async _job => {
     await checkExpirations();
   },
   {
-    connection: {
-      host: process.env.REDIS_HOST || '127.0.0.1',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-    },
+    connection: redisConnection,
   }
 );
 

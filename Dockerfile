@@ -31,8 +31,8 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S botter -u 1001
+RUN groupadd -g 1001 nodejs
+RUN useradd -u 1001 -g nodejs -s /usr/sbin/nologin -m botter
 
 # Create logs directory
 RUN mkdir -p /app/logs && chown botter:nodejs /app/logs
