@@ -4,7 +4,8 @@ WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+# Install all deps so build tools (dotenv-cli, tsc) are available
+RUN npm ci && npm cache clean --force
 
 # Copy source code
 COPY . .
