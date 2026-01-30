@@ -38,7 +38,7 @@ async function healthCheck(): Promise<HealthCheckResponse> {
       try {
         await redis.ping();
         healthCheck.services.redis = 'ok';
-      } catch (redisError) {
+      } catch (_redisError) {
         healthCheck.services.redis = 'failed';
         healthCheck.status = 'unhealthy';
       }
@@ -49,7 +49,7 @@ async function healthCheck(): Promise<HealthCheckResponse> {
     healthCheck.version = process.env.npm_package_version || 'unknown';
 
     return healthCheck;
-  } catch (error) {
+  } catch (_error) {
     const healthCheck: HealthCheckResponse = {
       status: 'unhealthy',
       timestamp: new Date().toISOString(),

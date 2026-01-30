@@ -56,7 +56,7 @@ export class LoggerService {
       `📅 **Timestamp:** \`${new Date().toLocaleString('uz-UZ', { timeZone: 'Asia/Tashkent' })}\``;
 
     try {
-      const { bot } = require('../bot/bot');
+      const { bot } = await import('../bot/bot');
       await bot.api.sendMessage(channelId, message, { parse_mode: 'Markdown' });
     } catch (err) {
       console.error(
@@ -71,7 +71,7 @@ export class LoggerService {
     if (!channelId) return;
 
     try {
-      const { bot } = require('../bot/bot');
+      const { bot } = await import('../bot/bot');
       await bot.api.sendMessage(channelId, message, { parse_mode: 'Markdown' });
     } catch (err) {
       console.error(

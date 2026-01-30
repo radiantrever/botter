@@ -2,6 +2,7 @@ import { Worker } from 'bullmq';
 import { SubscriptionRepository } from '../core/subscription.repo';
 import { bot } from '../bot/bot';
 import { Language, t } from '../bot/i18n';
+import { LoggerService } from '../core/logger.service';
 
 const subRepo = new SubscriptionRepository();
 
@@ -39,7 +40,6 @@ export async function checkExpirations() {
             .sendMessage(Number(userId), message, { parse_mode: 'Markdown' })
             .catch(() => {});
 
-          const { LoggerService } = require('../core/logger.service');
           await LoggerService.logEvent(
             `🚪 **USER KICKED (EXPIRED)**\n\n` +
               `👤 **User:** ${sub.user.firstName || ''} (${sub.user.username ? '@' + sub.user.username : 'No username'})\n` +
