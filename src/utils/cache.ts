@@ -62,10 +62,14 @@ export async function getFromCache<T = any>(key: string): Promise<T | null> {
  * @param value Value to cache
  * @param options Cache options
  */
-export async function setInCache<T = any>(key: string, value: T, options?: CacheOptions): Promise<void> {
+export async function setInCache<T = any>(
+  key: string,
+  value: T,
+  options?: CacheOptions
+): Promise<void> {
   const ttl = options?.ttl ?? DEFAULT_TTL;
-  const expiry = Date.now() + (ttl * 1000);
-  
+  const expiry = Date.now() + ttl * 1000;
+
   // Set in Redis if available
   if (redis) {
     try {
@@ -120,13 +124,17 @@ export async function clearCache(): Promise<void> {
  * @param ttl Time to live in seconds
  */
 export function Cache(ttl: number = DEFAULT_TTL) {
-  return function(target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+  return function (
+    target: any,
+    propertyKey: string,
+    descriptor: PropertyDescriptor
+  ) {
     const method = descriptor.value;
 
-    descriptor.value = async function(...args: any[]) {
+    descriptor.value = async function (...args: any[]) {
       // Create cache key from method name and arguments
       const cacheKey = `${target.constructor.name}:${propertyKey}:${JSON.stringify(args)}`;
-      
+
       // Try to get from cache first
       const cachedResult = await getFromCache(cacheKey);
       if (cachedResult !== null) {
@@ -149,7 +157,11 @@ export const getChannelCache = async (channelId: number | string) => {
   return getFromCache<Channel>(`channel:${channelId}`);
 };
 
-export const setChannelCache = async (channelId: number | string, channel: Channel, ttl: number = 300) => {
+export const setChannelCache = async (
+  channelId: number | string,
+  channel: Channel,
+  ttl: number = 300
+) => {
   return setInCache<Channel>(`channel:${channelId}`, channel, { ttl });
 };
 
@@ -157,7 +169,11 @@ export const getUserCache = async (userId: number | string) => {
   return getFromCache<User>(`user:${userId}`);
 };
 
-export const setUserCache = async (userId: number | string, user: User, ttl: number = 600) => {
+export const setUserCache = async (
+  userId: number | string,
+  user: User,
+  ttl: number = 600
+) => {
   return setInCache<User>(`user:${userId}`, user, { ttl });
 };
 
@@ -165,7 +181,11 @@ export const getSubscriptionPlansCache = async (channelId: number | string) => {
   return getFromCache<SubscriptionPlan[]>(`plans:${channelId}`);
 };
 
-export const setSubscriptionPlansCache = async (channelId: number | string, plans: SubscriptionPlan[], ttl: number = 1800) => {
+export const setSubscriptionPlansCache = async (
+  channelId: number | string,
+  plans: SubscriptionPlan[],
+  ttl: number = 1800
+) => {
   return setInCache<SubscriptionPlan[]>(`plans:${channelId}`, plans, { ttl });
 };
 

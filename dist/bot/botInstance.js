@@ -9,6 +9,6 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const botToken = process.env.BOT_TOKEN;
 if (!botToken) {
-    throw new Error("BOT_TOKEN is missing in environment variables");
+    throw new Error('BOT_TOKEN is missing in environment variables');
 }
 exports.bot = new grammy_1.Bot(botToken);

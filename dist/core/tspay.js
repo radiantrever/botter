@@ -17,7 +17,7 @@ class TsPayClient {
                 amount,
                 access_token: accessToken,
                 redirect_url: redirectUrl,
-                comment: comment
+                comment: comment,
             });
             return response.data;
         }
@@ -34,8 +34,8 @@ class TsPayClient {
             console.log(`TsPay: Checking transaction ${transactionId}...`);
             const response = await axios_1.default.get(`${this.baseUrl}/transactions/${transactionId}/`, {
                 params: {
-                    access_token: accessToken
-                }
+                    access_token: accessToken,
+                },
             });
             console.log('TsPay Check Response:', JSON.stringify(response.data, null, 1));
             return response.data;

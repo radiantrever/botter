@@ -10,7 +10,10 @@ const DEFAULT_WINDOW_MS = 10000; // 10 seconds
 async function rateLimit(identifier, limit = DEFAULT_LIMIT, windowMs = DEFAULT_WINDOW_MS) {
     const now = Date.now();
     const key = `${identifier}:${Math.floor(now / windowMs)}`;
-    const record = inMemoryLimits.get(key) || { count: 0, resetTime: now + windowMs };
+    const record = inMemoryLimits.get(key) || {
+        count: 0,
+        resetTime: now + windowMs,
+    };
     if (record.resetTime < now) {
         record.count = 0;
         record.resetTime = now + windowMs;

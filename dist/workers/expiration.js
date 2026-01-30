@@ -13,7 +13,7 @@ const subRepo = new subscription_repo_1.SubscriptionRepository();
  * This function can be called by a BullMQ worker or a simple setInterval.
  */
 async function checkExpirations() {
-    console.log("Worker: Checking expirations and reminders...");
+    console.log('Worker: Checking expirations and reminders...');
     try {
         // 1. Kicking expired users
         const expiredSubs = await subRepo.findExpiredActiveSubscriptions();
@@ -27,17 +27,23 @@ async function checkExpirations() {
                     await bot_1.bot.api.banChatMember(Number(channelId), Number(userId));
                     await bot_1.bot.api.unbanChatMember(Number(channelId), Number(userId));
                     if (sub.inviteLink) {
-                        await bot_1.bot.api.revokeChatInviteLink(Number(channelId), sub.inviteLink).catch(() => { });
+                        await bot_1.bot.api
+                            .revokeChatInviteLink(Number(channelId), sub.inviteLink)
+                            .catch(() => { });
                     }
                     await subRepo.expireSubscription(sub.id);
-                    const message = (0, i18n_1.t)(lang, "sub_expired", { channel: sub.plan.channel.title });
-                    await bot_1.bot.api.sendMessage(Number(userId), message, { parse_mode: "Markdown" }).catch(() => { });
+                    const message = (0, i18n_1.t)(lang, 'sub_expired', {
+                        channel: sub.plan.channel.title,
+                    });
+                    await bot_1.bot.api
+                        .sendMessage(Number(userId), message, { parse_mode: 'Markdown' })
+                        .catch(() => { });
                     const { LoggerService } = require('../core/logger.service');
                     await LoggerService.logEvent(`🚪 **USER KICKED (EXPIRED)**\n\n` +
                         `👤 **User:** ${sub.user.firstName || ''} (${sub.user.username ? '@' + sub.user.username : 'No username'})\n` +
                         `🆔 **ID:** \`${userId}\`\n` +
                         `📢 **Channel:** ${sub.plan.channel.title}\n` +
-                        `📅 **Expired At:** \`${sub.endDate?.toLocaleString()}\``).catch((err) => console.error("Failed to log kick to admin channel:", err));
+                        `📅 **Expired At:** \`${sub.endDate?.toLocaleString()}\``).catch((err) => console.error('Failed to log kick to admin channel:', err));
                     console.log(`Worker: Successfully processed expiration for user ${userId}`);
                 }
                 catch (e) {
@@ -46,11 +52,11 @@ async function checkExpirations() {
             }
         }
         // 2. Sending Reminders (3 days and 1 day)
-        await sendReminders(3, "reminder_3d");
-        await sendReminders(1, "reminder_1d");
+        await sendReminders(3, 'reminder_3d');
+        await sendReminders(1, 'reminder_1d');
     }
     catch (globalErr) {
-        console.error("Worker: Global error in checkExpirations:", globalErr);
+        console.error('Worker: Global error in checkExpirations:', globalErr);
     }
 }
 async function sendReminders(days, translationKey) {
@@ -58,14 +64,19 @@ async function sendReminders(days, translationKey) {
         const subs = await subRepo.findSubscriptionsForReminder(days);
         for (const sub of subs) {
             const lang = sub.user.language || 'en';
-            const message = (0, i18n_1.t)(lang, translationKey, { channel: sub.plan.channel.title });
-            await bot_1.bot.api.sendMessage(Number(sub.user.telegramId), message, { parse_mode: "Markdown" })
+            const message = (0, i18n_1.t)(lang, translationKey, {
+                channel: sub.plan.channel.title,
+            });
+            await bot_1.bot.api
+                .sendMessage(Number(sub.user.telegramId), message, {
+                parse_mode: 'Markdown',
+            })
                 .then(async () => {
                 await subRepo.updateReminderFlag(sub.id, days);
                 console.log(`Worker: Sent ${days}-day reminder to user ${sub.user.telegramId}`);
             })
                 .catch(err => {
-                if (err.description?.includes("bot was blocked")) {
+                if (err.description?.includes('bot was blocked')) {
                     // Optional: mark as reminded to stop trying
                     subRepo.updateReminderFlag(sub.id, days).catch(() => { });
                 }
@@ -77,13 +88,13 @@ async function sendReminders(days, translationKey) {
     }
 }
 // Optional: BullMQ Worker if infrastructure is available
-exports.expirationWorker = new bullmq_1.Worker('expiration-queue', async (job) => {
+exports.expirationWorker = new bullmq_1.Worker('expiration-queue', async (_job) => {
     await checkExpirations();
 }, {
     connection: {
         host: process.env.REDIS_HOST || '127.0.0.1',
-        port: parseInt(process.env.REDIS_PORT || '6379')
-    }
+        port: parseInt(process.env.REDIS_PORT || '6379'),
+    },
 });
 // For immediate fail-safe without requiring Redis/BullMQ during dev/simple VPS:
 function startExpirationCron(intervalMs = 60 * 60 * 1000) {

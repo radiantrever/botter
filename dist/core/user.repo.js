@@ -25,7 +25,7 @@ class UserRepository {
         if (existing) {
             return prisma_1.default.user.update({
                 where: { telegramId },
-                data: updateData
+                data: updateData,
             });
         }
         // New User logic
@@ -34,10 +34,10 @@ class UserRepository {
             username: username ?? null,
             firstName: firstName ?? null,
             lastName: lastName ?? null,
-            language: language ?? 'en'
+            language: language ?? 'en',
         };
         return prisma_1.default.user.create({
-            data: createData
+            data: createData,
         });
     }
 }

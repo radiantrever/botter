@@ -48,16 +48,16 @@ class SubscriptionRepository {
             where: {
                 status: 'ACTIVE',
                 endDate: { lte: reminderDate },
-                [flagField]: false
+                [flagField]: false,
             },
-            include: { user: true, plan: { include: { channel: true } } }
+            include: { user: true, plan: { include: { channel: true } } },
         });
     }
     async updateReminderFlag(id, daysRemaining) {
         const flagField = daysRemaining === 1 ? 'reminded1d' : 'reminded3d';
         return prisma_1.default.subscription.update({
             where: { id },
-            data: { [flagField]: true }
+            data: { [flagField]: true },
         });
     }
     async expireSubscription(id) {
@@ -69,7 +69,7 @@ class SubscriptionRepository {
     async findPlanById(planId) {
         return prisma_1.default.subscriptionPlan.findUnique({
             where: { id: planId },
-            include: { channel: true }
+            include: { channel: true },
         });
     }
     async createActiveSubscription(userId, planId, paymentId, startDate, endDate, inviteLink, partnerId) {
@@ -82,8 +82,8 @@ class SubscriptionRepository {
                 startDate,
                 endDate,
                 inviteLink,
-                partnerId
-            }
+                partnerId,
+            },
         });
     }
 }

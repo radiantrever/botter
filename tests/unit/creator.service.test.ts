@@ -1,35 +1,27 @@
 import { CreatorService } from '../../src/core/creator.service';
-import { UserRepository } from '../../src/core/user.repo';
-import { CreatorRepository } from '../../src/core/creator.repo';
 
-// Mock repositories
-const mockUserRepository = {
-  upsertUser: jest.fn(),
-  findByTelegramId: jest.fn(),
-} as unknown as UserRepository;
+// Mock the prisma module
+jest.mock('../../src/db/prisma', () => ({
+  user: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+  },
+  creator: {
+    findUnique: jest.fn(),
+    create: jest.fn(),
+    findFirst: jest.fn(),
+  },
+}));
 
-const mockCreatorRepository = {
-  createCreator: jest.fn(),
-  findByUserId: jest.fn(),
-  findByTelegramId: jest.fn(),
-} as unknown as CreatorRepository;
+// Import after mocking
+import prisma from '../../src/db/prisma';
 
 describe('CreatorService', () => {
   let creatorService: CreatorService;
 
   beforeEach(() => {
     creatorService = new CreatorService();
-    
-    // Replace repositories with mocks
-    Object.defineProperty(creatorService, 'userRepo', {
-      value: mockUserRepository,
-      writable: true,
-    });
-    
-    Object.defineProperty(creatorService, 'creatorRepo', {
-      value: mockCreatorRepository,
-      writable: true,
-    });
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
@@ -54,9 +46,13 @@ describe('CreatorService', () => {
         channels: [],
       };
 
-      (mockUserRepository.upsertUser as jest.MockedFunction<any>).mockResolvedValue(mockUser);
-      (mockCreatorRepository.findByUserId as jest.MockedFunction<any>).mockResolvedValue(null);
-      (mockCreatorRepository.createCreator as jest.MockedFunction<any>).mockResolvedValue(mockCreator);
+      // Mock prisma calls
+      (prisma.user.findUnique as jest.MockedFunction<any>)
+        .mockResolvedValueOnce(null) // First call in upsertUser - check if user exists
+        .mockResolvedValueOnce(mockUser); // Second call in createCreator - check if user exists by ID
+      (prisma.user.create as jest.MockedFunction<any>).mockResolvedValue(mockUser);
+      (prisma.creator.findUnique as jest.MockedFunction<any>).mockResolvedValue(null);
+      (prisma.creator.create as jest.MockedFunction<any>).mockResolvedValue(mockCreator);
 
       const result = await creatorService.registerCreator(
         123456789n,
@@ -65,14 +61,21 @@ describe('CreatorService', () => {
         'User'
       );
 
-      expect(mockUserRepository.upsertUser).toHaveBeenCalledWith(
-        123456789n,
-        'testuser',
-        'Test',
-        'User'
-      );
-      expect(mockCreatorRepository.findByUserId).toHaveBeenCalledWith(1);
-      expect(mockCreatorRepository.createCreator).toHaveBeenCalledWith(1);
+      // Check that the user was created
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { telegramId: 123456789n }
+      });
+      expect(prisma.user.create).toHaveBeenCalled();
+      
+      // Check that the creator was created
+      expect(prisma.creator.findUnique).toHaveBeenCalledWith({
+        where: { userId: 1 },
+        include: { channels: true }
+      });
+      expect(prisma.creator.create).toHaveBeenCalledWith({
+        data: { userId: 1 }
+      });
+      
       expect(result).toEqual(mockCreator);
     });
 
@@ -93,8 +96,12 @@ describe('CreatorService', () => {
         channels: [],
       };
 
-      (mockUserRepository.upsertUser as jest.MockedFunction<any>).mockResolvedValue(mockUser);
-      (mockCreatorRepository.findByUserId as jest.MockedFunction<any>).mockResolvedValue(mockExistingCreator);
+      // Mock prisma calls
+      (prisma.user.findUnique as jest.MockedFunction<any>)
+        .mockResolvedValueOnce(null) // First call in upsertUser - check if user exists
+        .mockResolvedValueOnce(mockUser); // Second call in createCreator - check if user exists by ID
+      (prisma.user.create as jest.MockedFunction<any>).mockResolvedValue(mockUser);
+      (prisma.creator.findUnique as jest.MockedFunction<any>).mockResolvedValue(mockExistingCreator);
 
       const result = await creatorService.registerCreator(
         123456789n,
@@ -103,14 +110,21 @@ describe('CreatorService', () => {
         'User'
       );
 
-      expect(mockUserRepository.upsertUser).toHaveBeenCalledWith(
-        123456789n,
-        'testuser',
-        'Test',
-        'User'
-      );
-      expect(mockCreatorRepository.findByUserId).toHaveBeenCalledWith(1);
-      expect(mockCreatorRepository.createCreator).not.toHaveBeenCalled();
+      // Check that the user was created
+      expect(prisma.user.findUnique).toHaveBeenCalledWith({
+        where: { telegramId: 123456789n }
+      });
+      expect(prisma.user.create).toHaveBeenCalled();
+      
+      // Check that we looked for existing creator
+      expect(prisma.creator.findUnique).toHaveBeenCalledWith({
+        where: { userId: 1 },
+        include: { channels: true }
+      });
+      
+      // Check that creator.create was NOT called
+      expect(prisma.creator.create).not.toHaveBeenCalled();
+      
       expect(result).toEqual(mockExistingCreator);
     });
   });

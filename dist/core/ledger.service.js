@@ -25,7 +25,7 @@ class LedgerService {
             providerFee,
             platformFee,
             partnerShare,
-            creatorShare
+            creatorShare,
         };
     }
     async recordTransaction(subscriptionId, grossAmount, creatorId) {
@@ -35,13 +35,15 @@ class LedgerService {
             include: {
                 user: true,
                 partner: true,
-                plan: { include: { channel: true } }
-            }
+                plan: { include: { channel: true } },
+            },
         });
         const channel = subscription?.plan?.channel;
         const platformPercent = channel?.commissionRate ?? exports.FEES.PLATFORM_PERCENT;
         // Only apply partner commission if the partner is APPROVED
-        const partner = subscription?.partner?.status === 'APPROVED' ? subscription.partner : null;
+        const partner = subscription?.partner?.status === 'APPROVED'
+            ? subscription.partner
+            : null;
         const partnerPercent = partner?.commissionRate ?? 0;
         const { providerFee, platformFee, partnerShare, creatorShare } = this.calculateFees(grossAmount, platformPercent, partnerPercent);
         return prisma_1.default.$transaction(async (tx) => {
@@ -55,29 +57,32 @@ class LedgerService {
                     partnerShare,
                     creatorShare,
                     partnerId: partner?.id,
-                    status: 'COMPLETED'
-                }
+                    status: 'COMPLETED',
+                },
             });
             // 2. Update Creator Balance (Channel Owner)
             await tx.creatorBalance.upsert({
                 where: { creatorId },
                 update: { availableBalance: { increment: creatorShare } },
-                create: { creatorId, availableBalance: creatorShare }
+                create: { creatorId, availableBalance: creatorShare },
             });
             // 3. Update Partner Balance (if applicable)
             if (partnerShare > 0 && partner) {
                 let partnerCreator = await tx.creator.findUnique({
-                    where: { userId: partner.userId }
+                    where: { userId: partner.userId },
                 });
                 if (!partnerCreator) {
                     partnerCreator = await tx.creator.create({
-                        data: { userId: partner.userId }
+                        data: { userId: partner.userId },
                     });
                 }
                 await tx.creatorBalance.upsert({
                     where: { creatorId: partnerCreator.id },
                     update: { availableBalance: { increment: partnerShare } },
-                    create: { creatorId: partnerCreator.id, availableBalance: partnerShare }
+                    create: {
+                        creatorId: partnerCreator.id,
+                        availableBalance: partnerShare,
+                    },
                 });
             }
             return transaction;
@@ -85,7 +90,7 @@ class LedgerService {
     }
     async getBalance(creatorId) {
         const balance = await prisma_1.default.creatorBalance.findUnique({
-            where: { creatorId }
+            where: { creatorId },
         });
         return balance?.availableBalance || 0;
     }

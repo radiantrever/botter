@@ -14,19 +14,21 @@ class LoggerService {
     static async logPayoutRequest(details) {
         const timestamp = new Date().toISOString();
         const fullName = `${details.firstName ?? ''} ${details.lastName ?? ''}`.trim();
-        const userDisplay = details.username ? `@${details.username}` : (fullName || 'Unknown');
+        const userDisplay = details.username
+            ? `@${details.username}`
+            : fullName || 'Unknown';
         // 1. Internal Log Entry
         const logEntry = `[${timestamp}] PAYOUT_ID: ${details.payoutId} | TG_ID: ${details.telegramId} | USER: ${userDisplay} | AMOUNT: ${details.amount} UZS | CARD: ${details.cardNumber} | BALANCE_LEFT: ${details.totalBalance} | TOTAL_ALREADY_ASKED: ${details.totalWithdrawn}\n`;
         try {
             fs_1.default.appendFileSync(LOG_FILE, logEntry);
         }
         catch (err) {
-            console.error("Critical Error: Failed to write to payout log file!", err);
+            console.error('Critical Error: Failed to write to payout log file!', err);
         }
         // 2. Telegram Notification
         const channelId = process.env.LOG_CHANNEL_ID;
         if (!channelId) {
-            console.warn("LOG_CHANNEL_ID not set in .env. Skipping Telegram notification.");
+            console.warn('LOG_CHANNEL_ID not set in .env. Skipping Telegram notification.');
             return;
         }
         const message = `💸 **NEW PAYOUT REQUEST** 💸\n\n` +
@@ -44,7 +46,7 @@ class LoggerService {
             await bot.api.sendMessage(channelId, message, { parse_mode: 'Markdown' });
         }
         catch (err) {
-            console.error("Failed to send payout notification to Telegram channel:", err);
+            console.error('Failed to send payout notification to Telegram channel:', err);
         }
     }
     static async logEvent(message) {
@@ -56,7 +58,7 @@ class LoggerService {
             await bot.api.sendMessage(channelId, message, { parse_mode: 'Markdown' });
         }
         catch (err) {
-            console.error("Failed to send event notification to Telegram channel:", err);
+            console.error('Failed to send event notification to Telegram channel:', err);
         }
     }
 }

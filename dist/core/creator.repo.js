@@ -12,7 +12,7 @@ class CreatorRepository {
         // Currently Creator just links to User, but we might add fields later.
         const user = await prisma_1.default.user.findUnique({ where: { id: userId } });
         if (!user)
-            throw new Error("User not found");
+            throw new Error('User not found');
         return prisma_1.default.creator.create({
             data: {
                 userId: userId,

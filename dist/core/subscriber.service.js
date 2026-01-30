@@ -29,12 +29,12 @@ class SubscriberService {
         // 1. Fetch Plan
         const plan = await subRepo.findPlanById(planId);
         if (!plan)
-            throw new Error("Plan not found");
+            throw new Error('Plan not found');
         const channelTelegramId = plan.channel.telegramChannelId;
         // 2. Create Invite Link
         const invite = await api.createChatInviteLink(Number(channelTelegramId), {
             member_limit: 1,
-            name: `Sub for User ${userId}`
+            name: `Sub for User ${userId}`,
         });
         // 3. Ensure User Record exists
         const user = await userRepo.upsertUser(userId, userData?.username, userData?.firstName, userData?.lastName);
@@ -51,9 +51,9 @@ class SubscriberService {
                     where: {
                         userId_channelId: {
                             userId: referrerUser.id,
-                            channelId: plan.channelId
-                        }
-                    }
+                            channelId: plan.channelId,
+                        },
+                    },
                 });
                 if (partnerRecord && partnerRecord.status === 'APPROVED') {
                     partnerId = partnerRecord.id;
@@ -70,15 +70,15 @@ class SubscriberService {
     async requestPartnership(telegramId, channelId) {
         const user = await userRepo.findByTelegramId(telegramId);
         if (!user)
-            throw new Error("User not found");
+            throw new Error('User not found');
         // Check if already exists
         const existing = await prisma_1.default.partner.findUnique({
             where: {
                 userId_channelId: {
                     userId: user.id,
-                    channelId
-                }
-            }
+                    channelId,
+                },
+            },
         });
         if (existing)
             return existing;
@@ -86,8 +86,8 @@ class SubscriberService {
             data: {
                 userId: user.id,
                 channelId,
-                status: 'PENDING'
-            }
+                status: 'PENDING',
+            },
         });
     }
 }

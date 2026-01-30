@@ -55,7 +55,7 @@ async function getFromCache(key) {
  */
 async function setInCache(key, value, options) {
     const ttl = options?.ttl ?? DEFAULT_TTL;
-    const expiry = Date.now() + (ttl * 1000);
+    const expiry = Date.now() + ttl * 1000;
     // Set in Redis if available
     if (redis) {
         try {

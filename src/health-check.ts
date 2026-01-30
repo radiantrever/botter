@@ -23,14 +23,14 @@ async function healthCheck(): Promise<HealthCheckResponse> {
   try {
     // Check database connectivity
     await prisma.$queryRaw`SELECT 1`;
-    
+
     const healthCheck: HealthCheckResponse = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       services: {
         database: 'ok',
-        application: 'ok'
-      }
+        application: 'ok',
+      },
     };
 
     // Check Redis connectivity if configured
@@ -55,10 +55,10 @@ async function healthCheck(): Promise<HealthCheckResponse> {
       timestamp: new Date().toISOString(),
       services: {
         database: 'failed',
-        application: 'failed'
+        application: 'failed',
       },
       uptime: process.uptime ? process.uptime() : 0,
-      version: process.env.npm_package_version || 'unknown'
+      version: process.env.npm_package_version || 'unknown',
     };
 
     if (redis) {

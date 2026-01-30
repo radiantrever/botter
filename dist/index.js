@@ -31,7 +31,7 @@ async function main() {
             res.json({
                 status: 'running',
                 uptime: process.uptime(),
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
             });
         });
         // Start server for health checks

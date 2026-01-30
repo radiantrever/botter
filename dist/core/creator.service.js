@@ -22,21 +22,21 @@ class CreatorService {
         // Check if creator exists, if not create
         let creator = await creatorRepo.findByUserId(user.id);
         if (!creator) {
-            creator = await creatorRepo.createCreator(user.id);
+            creator = (await creatorRepo.createCreator(user.id));
         }
         if (!creator)
-            throw new Error("Failed to create creator");
+            throw new Error('Failed to create creator');
         return creator;
     }
     async registerChannel(creatorUserId, channelTelegramId, title) {
         const creator = await creatorRepo.findByUserId(creatorUserId);
         if (!creator)
-            throw new Error("Creator not found");
+            throw new Error('Creator not found');
         // Check if channel already exists
-        let channel = await channelRepo.findByTelegramId(channelTelegramId);
+        const channel = await channelRepo.findByTelegramId(channelTelegramId);
         if (channel) {
             if (channel.creatorId !== creator.id)
-                throw new Error("Channel already registered by another creator");
+                throw new Error('Channel already registered by another creator');
             return channel;
         }
         return channelRepo.createChannel(creator.id, channelTelegramId, title);
@@ -53,14 +53,14 @@ class CreatorService {
     async requestPayout(telegramId, amount, cardNumber) {
         const creator = await creatorRepo.findByTelegramId(telegramId);
         if (!creator)
-            throw new Error("Creator not found");
+            throw new Error('Creator not found');
         const available = await ledgerService.getBalance(creator.id);
         if (amount < MIN_WITHDRAWAL)
-            throw new Error("MIN_WITHDRAWAL_REQUIRED");
+            throw new Error('MIN_WITHDRAWAL_REQUIRED');
         if (amount > available)
-            throw new Error("Insufficient balance");
+            throw new Error('Insufficient balance');
         if (amount <= 0)
-            throw new Error("Invalid amount");
+            throw new Error('Invalid amount');
         const payout = await prisma_1.default.$transaction(async (tx) => {
             // 1. Create Payout record
             const record = await tx.payout.create({
@@ -68,15 +68,15 @@ class CreatorService {
                     creatorId: creator.id,
                     amount,
                     cardNumber,
-                    status: 'REQUESTED'
-                }
+                    status: 'REQUESTED',
+                },
             });
             // 2. Deduct from balance
             await tx.creatorBalance.update({
                 where: { creatorId: creator.id },
                 data: {
-                    availableBalance: { decrement: amount }
-                }
+                    availableBalance: { decrement: amount },
+                },
             });
             return record;
         });
@@ -87,9 +87,9 @@ class CreatorService {
             where: {
                 creatorId: creator.id,
                 status: { in: ['PAID', 'PROCESSING', 'REQUESTED'] },
-                id: { not: payout.id } // Exclude current one for "already asked"
+                id: { not: payout.id }, // Exclude current one for "already asked"
             },
-            _sum: { amount: true }
+            _sum: { amount: true },
         });
         const alreadyAsked = stats._sum.amount || 0;
         logger_service_1.LoggerService.logPayoutRequest({
@@ -102,7 +102,7 @@ class CreatorService {
             lastName: user?.lastName ?? undefined,
             totalBalance: available - amount, // Balance after this withdrawal
             totalWithdrawn: alreadyAsked, // Amount asked BEFORE this one
-        }).catch(err => console.error("Non-blocking Logger Error:", err));
+        }).catch(err => console.error('Non-blocking Logger Error:', err));
         return payout;
     }
     async getRecentPayouts(telegramId, days = 7) {
@@ -114,10 +114,10 @@ class CreatorService {
         return prisma_1.default.payout.findMany({
             where: {
                 creatorId: creator.id,
-                requestedAt: { gte: startDate }
+                requestedAt: { gte: startDate },
             },
             orderBy: { requestedAt: 'desc' },
-            take: 10
+            take: 10,
         });
     }
     async getPayoutHistory(telegramId) {
@@ -127,53 +127,53 @@ class CreatorService {
         return prisma_1.default.payout.findMany({
             where: { creatorId: creator.id },
             orderBy: { requestedAt: 'desc' },
-            take: 50
+            take: 50,
         });
     }
     async getAnalytics(telegramId) {
         const creator = await creatorRepo.findByTelegramId(telegramId);
         if (!creator)
-            throw new Error("Creator not found");
+            throw new Error('Creator not found');
         const now = new Date();
         const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
         // 1. Total Revenue (Gross)
         const revenueStats = await prisma_1.default.transaction.aggregate({
             where: {
                 subscription: { plan: { channel: { creatorId: creator.id } } },
-                status: 'COMPLETED'
+                status: 'COMPLETED',
             },
-            _sum: { grossAmount: true }
+            _sum: { grossAmount: true },
         });
         // 2. Active Subscribers
         const activeCount = await prisma_1.default.subscription.count({
             where: {
                 plan: { channel: { creatorId: creator.id } },
                 status: 'ACTIVE',
-                endDate: { gt: now }
-            }
+                endDate: { gt: now },
+            },
         });
         // 3. Churn (Expired)
         const expiredCount = await prisma_1.default.subscription.count({
             where: {
                 plan: { channel: { creatorId: creator.id } },
-                status: 'EXPIRED'
-            }
+                status: 'EXPIRED',
+            },
         });
         // 4. New Today
         const newTodayCount = await prisma_1.default.subscription.count({
             where: {
                 plan: { channel: { creatorId: creator.id } },
-                createdAt: { gte: startOfToday }
-            }
+                createdAt: { gte: startOfToday },
+            },
         });
         // 5. Partner Result (Total unique users referred to this creator's channels)
         const referralSales = await prisma_1.default.transaction.aggregate({
             where: {
                 subscription: { plan: { channel: { creatorId: creator.id } } },
-                partnerShare: { gt: 0 }
+                partnerShare: { gt: 0 },
             },
             _sum: { partnerShare: true },
-            _count: { id: true }
+            _count: { id: true },
         });
         return {
             totalRevenue: revenueStats._sum.grossAmount || 0,
@@ -181,7 +181,7 @@ class CreatorService {
             totalChurn: expiredCount,
             newSubscribersToday: newTodayCount,
             partnerConversions: referralSales._count.id || 0,
-            partnerPayouts: referralSales._sum.partnerShare || 0
+            partnerPayouts: referralSales._sum.partnerShare || 0,
         };
     }
     async getPartnerRequests(telegramId) {
@@ -191,49 +191,49 @@ class CreatorService {
         return prisma_1.default.partner.findMany({
             where: {
                 channel: { creatorId: creator.id },
-                status: 'PENDING'
+                status: 'PENDING',
             },
             include: {
                 user: true,
-                channel: true
-            }
+                channel: true,
+            },
         });
     }
-    async approvePartner(telegramId, partnerId, commissionRate = 0.40) {
+    async approvePartner(telegramId, partnerId, commissionRate = 0.4) {
         const creator = await creatorRepo.findByTelegramId(telegramId);
         if (!creator)
-            throw new Error("Creator not found");
+            throw new Error('Creator not found');
         // Verify ownership
         const partner = await prisma_1.default.partner.findUnique({
             where: { id: partnerId },
-            include: { channel: true }
+            include: { channel: true },
         });
         if (!partner || partner.channel.creatorId !== creator.id) {
-            throw new Error("Unauthorized or partner not found");
+            throw new Error('Unauthorized or partner not found');
         }
         return prisma_1.default.partner.update({
             where: { id: partnerId },
             data: {
                 status: 'APPROVED',
-                commissionRate
+                commissionRate,
             },
-            include: { user: true }
+            include: { user: true },
         });
     }
     async rejectPartner(telegramId, partnerId) {
         const creator = await creatorRepo.findByTelegramId(telegramId);
         if (!creator)
-            throw new Error("Creator not found");
+            throw new Error('Creator not found');
         const partner = await prisma_1.default.partner.findUnique({
             where: { id: partnerId },
-            include: { channel: true }
+            include: { channel: true },
         });
         if (!partner || partner.channel.creatorId !== creator.id) {
-            throw new Error("Unauthorized or partner not found");
+            throw new Error('Unauthorized or partner not found');
         }
         return prisma_1.default.partner.update({
             where: { id: partnerId },
-            data: { status: 'REJECTED' }
+            data: { status: 'REJECTED' },
         });
     }
     async getChannelPartners(telegramId, channelId) {
@@ -244,9 +244,9 @@ class CreatorService {
             where: {
                 channelId,
                 channel: { creatorId: creator.id },
-                status: 'APPROVED'
+                status: 'APPROVED',
             },
-            include: { user: true }
+            include: { user: true },
         });
     }
 }

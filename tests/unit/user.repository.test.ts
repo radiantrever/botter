@@ -1,28 +1,25 @@
 import { UserRepository } from '../../src/core/user.repo';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../../src/db/prisma';
 
-// Mock Prisma client
+// Mock the prisma module
+jest.mock('../../src/db/prisma');
+
 const mockPrisma = {
   user: {
     findUnique: jest.fn(),
     create: jest.fn(),
-    upsert: jest.fn(),
+    update: jest.fn(),
   },
-} as unknown as PrismaClient;
+};
+
+// Mock the default export
+(prisma as any) = mockPrisma;
 
 describe('UserRepository', () => {
   let userRepository: UserRepository;
 
   beforeEach(() => {
     userRepository = new UserRepository();
-    // Override the prisma instance with mock
-    Object.defineProperty(userRepository, 'prisma', {
-      value: mockPrisma,
-      writable: true,
-    });
-  });
-
-  afterEach(() => {
     jest.clearAllMocks();
   });
 
@@ -54,7 +51,7 @@ describe('UserRepository', () => {
 
   describe('upsertUser', () => {
     it('should upsert user with provided details', async () => {
-      const mockUpsertedUser = {
+      const mockExistingUser = {
         id: 1,
         telegramId: 123456789n,
         username: 'testuser',
@@ -64,7 +61,8 @@ describe('UserRepository', () => {
         createdAt: new Date(),
       };
 
-      (mockPrisma.user.upsert as jest.MockedFunction<any>).mockResolvedValue(mockUpsertedUser);
+      (mockPrisma.user.findUnique as jest.MockedFunction<any>).mockResolvedValue(mockExistingUser);
+      (mockPrisma.user.update as jest.MockedFunction<any>).mockResolvedValue(mockExistingUser);
 
       const result = await userRepository.upsertUser(
         123456789n,
@@ -74,15 +72,48 @@ describe('UserRepository', () => {
         'en'
       );
 
-      expect(mockPrisma.user.upsert).toHaveBeenCalledWith({
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+        where: { telegramId: 123456789n }
+      });
+      expect(mockPrisma.user.update).toHaveBeenCalledWith({
         where: { telegramId: 123456789n },
-        update: {
+        data: {
           username: 'testuser',
           firstName: 'Test',
           lastName: 'User',
           language: 'en',
         },
-        create: {
+      });
+      expect(result).toEqual(mockExistingUser);
+    });
+
+    it('should create new user when not found', async () => {
+      const mockNewUser = {
+        id: 1,
+        telegramId: 123456789n,
+        username: 'testuser',
+        firstName: 'Test',
+        lastName: 'User',
+        language: 'en',
+        createdAt: new Date(),
+      };
+
+      (mockPrisma.user.findUnique as jest.MockedFunction<any>).mockResolvedValue(null);
+      (mockPrisma.user.create as jest.MockedFunction<any>).mockResolvedValue(mockNewUser);
+
+      const result = await userRepository.upsertUser(
+        123456789n,
+        'testuser',
+        'Test',
+        'User',
+        'en'
+      );
+
+      expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
+        where: { telegramId: 123456789n }
+      });
+      expect(mockPrisma.user.create).toHaveBeenCalledWith({
+        data: {
           telegramId: 123456789n,
           username: 'testuser',
           firstName: 'Test',
@@ -90,7 +121,7 @@ describe('UserRepository', () => {
           language: 'en',
         },
       });
-      expect(result).toEqual(mockUpsertedUser);
+      expect(result).toEqual(mockNewUser);
     });
   });
 });
