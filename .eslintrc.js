@@ -1,61 +1,26 @@
-{
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "ecmaVersion": 2020,
-    "sourceType": "module",
-    "project": "./tsconfig.json"
+module.exports = {
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: 2020,
+    sourceType: "module"
   },
-  "plugins": [
-    "@typescript-eslint",
-    "prettier",
-    "import"
+  plugins: [
+    "@typescript-eslint"
   ],
-  "extends": [
+  extends: [
     "eslint:recommended",
-    "@typescript-eslint/recommended",
-    "prettier",
-    "plugin:import/errors",
-    "plugin:import/warnings",
-    "plugin:import/typescript"
+    "@typescript-eslint/recommended"
   ],
-  "rules": {
-    "prettier/prettier": "error",
-    "@typescript-eslint/no-unused-vars": "error",
-    "@typescript-eslint/explicit-function-return-type": "warn",
+  rules: {
+    "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }],
     "@typescript-eslint/no-explicit-any": "warn",
     "@typescript-eslint/no-var-requires": "off",
-    "@typescript-eslint/no-use-before-define": "off",
-    "@typescript-eslint/no-non-null-assertion": "off",
-    "import/order": [
-      "error",
-      {
-        "groups": [
-          "builtin",
-          "external",
-          "internal",
-          "parent",
-          "sibling",
-          "index"
-        ],
-        "newlines-between": "always",
-        "alphabetize": {
-          "order": "asc",
-          "caseInsensitive": true
-        }
-      }
-    ],
     "prefer-const": "error",
     "no-console": "warn",
-    "no-debugger": "error",
-    "no-duplicate-imports": "error"
+    "no-debugger": "error"
   },
-  "env": {
-    "node": true,
-    "jest": true
-  },
-  "settings": {
-    "import/resolver": {
-      "typescript": {}
-    }
+  env: {
+    node: true,
+    es6: true
   }
-}
+};
