@@ -57,6 +57,8 @@ composer.callbackQuery(/manage_channel_(\d+)/, async ctx => {
     .row()
     .text(context.t('get_link_btn'), `get_link_${channelId}`)
     .row()
+    .text(context.t('preview_settings_btn'), `preview_settings_${channelId}`)
+    .row()
     .text(context.t('back_dashboard_btn'), 'dashboard');
 
   await ctx.editMessageText(text, {
@@ -351,6 +353,76 @@ composer.callbackQuery(/get_link_(\d+)/, async ctx => {
   });
 });
 
+composer.callbackQuery(/preview_settings_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const channelId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  const creator = await creatorService.registerCreator(BigInt(ctx.from!.id));
+  const channel = creator.channels.find(c => c.id === channelId);
+  if (!channel) return ctx.reply(context.t('channel_not_found'));
+
+  const status = channel.previewEnabled
+    ? context.t('preview_status_on')
+    : context.t('preview_status_off');
+  const minutes = channel.previewDurationMin || 0;
+
+  const text = context.t('preview_settings_title', { status, minutes });
+  const keyboard = new InlineKeyboard()
+    .text(context.t('preview_set_btn'), `preview_set_${channelId}`)
+    .row();
+
+  if (channel.previewEnabled) {
+    keyboard
+      .text(context.t('preview_disable_btn'), `preview_disable_${channelId}`)
+      .row();
+  }
+
+  keyboard.text(context.t('back_dashboard_btn'), `manage_channel_${channelId}`);
+
+  await ctx.editMessageText(text, {
+    reply_markup: keyboard,
+    parse_mode: 'Markdown',
+  });
+});
+
+composer.callbackQuery(/preview_set_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const channelId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  ctx.session.step = 'setting_preview_minutes';
+  ctx.session.tempPreview = { channelId };
+
+  await ctx.reply(context.t('preview_enter_minutes'), {
+    parse_mode: 'Markdown',
+  });
+});
+
+composer.callbackQuery(/preview_disable_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const channelId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  try {
+    await creatorService.updatePreviewSettings(
+      BigInt(ctx.from!.id),
+      channelId,
+      false
+    );
+
+    await ctx.editMessageText(context.t('preview_disabled_msg'), {
+      reply_markup: new InlineKeyboard().text(
+        context.t('back_dashboard_btn'),
+        `manage_channel_${channelId}`
+      ),
+    });
+  } catch (e) {
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
 composer.command('register', async ctx => {
   const context = ctx as MyContextWithI18n;
   if (!ctx.from) return;
@@ -498,6 +570,46 @@ composer.on('message:text', async (ctx, next) => {
 
     ctx.session.step = undefined;
     ctx.session.tempPlan = undefined;
+    return;
+  }
+
+  if (step === 'setting_preview_minutes') {
+    const minutes = parseInt(ctx.message.text);
+    if (isNaN(minutes) || minutes < 1 || minutes > 15) {
+      return ctx.reply(context.t('preview_invalid_minutes'));
+    }
+
+    const channelId = ctx.session.tempPreview?.channelId;
+    if (!channelId) {
+      ctx.session.step = undefined;
+      ctx.session.tempPreview = undefined;
+      return ctx.reply(context.t('error_loading'));
+    }
+
+    try {
+      await creatorService.updatePreviewSettings(
+        BigInt(ctx.from!.id),
+        channelId,
+        true,
+        minutes
+      );
+
+      await ctx.reply(context.t('preview_updated', { minutes }), {
+        reply_markup: new InlineKeyboard().text(
+          context.t('back_dashboard_btn'),
+          `manage_channel_${channelId}`
+        ),
+      });
+    } catch (e: any) {
+      if (e.message === 'INVALID_PREVIEW_DURATION') {
+        await ctx.reply(context.t('preview_invalid_minutes'));
+      } else {
+        await ctx.reply(context.t('error_loading'));
+      }
+    }
+
+    ctx.session.step = undefined;
+    ctx.session.tempPreview = undefined;
     return;
   }
 

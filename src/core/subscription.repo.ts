@@ -103,4 +103,18 @@ export class SubscriptionRepository {
       },
     });
   }
+
+  async hasActiveSubscription(userId: number, channelId: number) {
+    const existing = await prisma.subscription.findFirst({
+      where: {
+        userId,
+        status: 'ACTIVE',
+        endDate: { gt: new Date() },
+        plan: { channelId },
+      },
+      select: { id: true },
+    });
+
+    return Boolean(existing);
+  }
 }

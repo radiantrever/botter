@@ -44,4 +44,18 @@ export class ChannelRepository {
       },
     });
   }
+
+  async updatePreviewSettings(
+    channelId: number,
+    previewEnabled: boolean,
+    previewDurationMin: number
+  ) {
+    return prisma.channel.update({
+      where: { id: channelId },
+      data: {
+        previewEnabled,
+        previewDurationMin,
+      },
+    });
+  }
 }

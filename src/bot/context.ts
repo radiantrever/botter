@@ -11,6 +11,9 @@ export interface SessionData {
     price?: number;
     duration?: number;
   };
+  tempPreview?: {
+    channelId?: number;
+  };
   withdrawAmount?: number;
   referrerId?: bigint;
 }

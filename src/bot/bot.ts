@@ -26,9 +26,11 @@ bot.catch(err => {
 
 import { creatorHandler } from './handlers/creator';
 import { subscriberHandler } from './handlers/subscriber';
+import { partnerHandler } from './handlers/partner';
 
 // Register Handlers
 bot.use(creatorHandler);
+bot.use(partnerHandler);
 bot.use(subscriberHandler);
 
 // Fallback for unknown messages

@@ -58,10 +58,8 @@ export async function handleStart(
     undefined
   );
 
-  // Show language selector if:
-  // 1. Language is not selected yet
-  // 2. OR it's a manual /start (no payload) AND it's NOT a callback from the selector itself
-  if (!ctx.session.languageSelected || (!actualPayload && !ctx.callbackQuery)) {
+  // Show language selector only if not selected yet
+  if (!ctx.session.languageSelected) {
     ctx.session.startPayload = actualPayload;
     const keyboard = new InlineKeyboard()
       .text("🇺🇿 O'zbekcha", 'set_lang_uz')
@@ -77,6 +75,8 @@ export async function handleStart(
     const text = ctx.t('welcome_basic');
     const keyboard = new InlineKeyboard()
       .text(ctx.t('creator_dashboard_btn'), 'dashboard')
+      .text(ctx.t('partner_dashboard_btn'), 'partner_dashboard')
+      .row()
       .text(ctx.t('referral_btn'), 'referral_program')
       .row()
       .text(ctx.t('how_to_sub_btn'), 'how_to_sub');
@@ -117,6 +117,13 @@ export async function handleStart(
           )
           .row();
       }
+    }
+
+    if (channel.previewEnabled && channel.previewDurationMin > 0) {
+      const minutes = Math.min(channel.previewDurationMin, 15);
+      keyboard
+        .text(ctx.t('preview_btn', { minutes }), `preview_channel_${channel.id}`)
+        .row();
     }
 
     // Add "Promote" button
@@ -168,6 +175,62 @@ composer.callbackQuery(/apply_partner_(\d+)/, async ctx => {
   }
 });
 
+composer.callbackQuery(/preview_channel_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const channelId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  try {
+    const result = await subService.startPreview(
+      BigInt(ctx.from!.id),
+      channelId,
+      ctx.api,
+      {
+        username: ctx.from?.username,
+        firstName: ctx.from?.first_name,
+        lastName: ctx.from?.last_name,
+      }
+    );
+
+    const previewEnd = new Date(result.preview.endDate);
+    const remainingMinutes = Math.max(
+      1,
+      Math.ceil((previewEnd.getTime() - Date.now()) / 60000)
+    );
+
+    await ctx.reply(
+      context.t('preview_start', {
+        minutes: remainingMinutes,
+        link: result.preview.inviteLink,
+      }),
+      { parse_mode: 'Markdown' }
+    );
+  } catch (e: any) {
+    if (e?.message === 'PREVIEW_COOLDOWN') {
+      const remainingDays =
+        typeof e?.remainingDays === 'number' ? e.remainingDays : 30;
+      await ctx.reply(
+        context.t('preview_cooldown', { days: remainingDays })
+      );
+      return;
+    }
+    if (e.message === 'PREVIEW_DISABLED') {
+      await ctx.reply(context.t('preview_not_available'));
+      return;
+    }
+    if (e.message === 'ALREADY_SUBSCRIBED') {
+      await ctx.reply(context.t('preview_already_subscribed'));
+      return;
+    }
+    if (e.message === 'CHANNEL_NOT_FOUND') {
+      await ctx.reply(context.t('channel_not_found'), { parse_mode: 'Markdown' });
+      return;
+    }
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
 // Language selection handlers
 composer.callbackQuery(/set_lang_(uz|en|ru)/, async ctx => {
   const lang = ctx.match[1] as 'uz' | 'en' | 'ru';
@@ -199,6 +262,8 @@ composer.callbackQuery('main_menu', async ctx => {
   const text = context.t('welcome_basic');
   const keyboard = new InlineKeyboard()
     .text(context.t('creator_dashboard_btn'), 'dashboard')
+    .text(context.t('partner_dashboard_btn'), 'partner_dashboard')
+    .row()
     .text(context.t('referral_btn'), 'referral_program')
     .row()
     .text(context.t('referral_howto_btn'), 'referral_howto')

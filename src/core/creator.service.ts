@@ -12,6 +12,8 @@ const channelRepo = new ChannelRepository();
 const ledgerService = new LedgerService();
 
 const MIN_WITHDRAWAL = 10000;
+const MIN_PREVIEW_MINUTES = 1;
+const MAX_PREVIEW_MINUTES = 15;
 
 export class CreatorService {
   async registerCreator(
@@ -224,6 +226,36 @@ export class CreatorService {
       partnerConversions: referralSales._count.id || 0,
       partnerPayouts: referralSales._sum.partnerShare || 0,
     };
+  }
+
+  async updatePreviewSettings(
+    telegramId: bigint,
+    channelId: number,
+    enabled: boolean,
+    minutes?: number
+  ) {
+    const creator = await creatorRepo.findByTelegramId(telegramId);
+    if (!creator) throw new Error('Creator not found');
+
+    const channel = await prisma.channel.findUnique({ where: { id: channelId } });
+    if (!channel || channel.creatorId !== creator.id) {
+      throw new Error('Channel not found');
+    }
+
+    if (!enabled) {
+      return channelRepo.updatePreviewSettings(channelId, false, 0);
+    }
+
+    const duration = Number(minutes);
+    if (
+      !Number.isInteger(duration) ||
+      duration < MIN_PREVIEW_MINUTES ||
+      duration > MAX_PREVIEW_MINUTES
+    ) {
+      throw new Error('INVALID_PREVIEW_DURATION');
+    }
+
+    return channelRepo.updatePreviewSettings(channelId, true, duration);
   }
 
   async getPartnerRequests(telegramId: bigint) {

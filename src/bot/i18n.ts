@@ -12,6 +12,7 @@ export const translations = {
       "📢 **Kanal:** {title}\n\nKirish ruxsatini olish uchun obuna ta'rifini tanlang:",
     no_plans: "\n\n⚠️ Ushbu kanal uchun hozircha faol ta'riflar mavjud emas.",
     buy_plan_btn: '{name} — {price} UZS',
+    preview_btn: '👀 {minutes} daqiqa preview',
     how_to_sub_text:
       "❓ **Qanday obuna bo'lish mumkin?**\n\nShaxsiy kanalga a'zo bo'lish uchun kanal egasi taqdim etgan **maxsus obuna havolasi** kerak bo'ladi.\n\nHavolani bosganingizda, men sizga mavjud ta'riflar va to'lov usullarini ko'rsataman.",
     pay_now_btn: "💳 To'lov qilish",
@@ -24,9 +25,21 @@ export const translations = {
       "❌ To'lov topilmadi. Agar mablag' yechilgan bo'lsa, qo'llab-quvvatlash xizmatiga murojaat qiling.",
     creator_dashboard_title: '🛠️ **Muallif boshqaruv paneli**\n\n',
     no_channels:
-      "Siz hali birorta ham kanalni ro'yxatdan o'tkazmagansiz.\n\n**Qanday qilib kanal qo'shish mumkin?**\n1. Botni kanalingizga **Administrator** sifatida qo'shing.\n2. Kanalingizdan istalgan xabarni ushbu botga **muallifini saqlagan holda** yo'naltiring (Forward).",
+      "Siz hali birorta ham kanalni ro'yxatdan o'tkazmagansiz.\n\n**Qanday qilib kanal qo'shish mumkin?**\n1. Botni kanalingizga **Administrator** sifatida qo'shing.\n2. Kanalingizdan istalgan xabarni ushbu botga **muallifini saqlagan holda** yo'naltiring (Forward).\n\n⚠️ **Muhim:** botda **Foydalanuvchilarni cheklash/ban qilish** (Ban users/Restrict) huquqi ham bo'lishi kerak.",
     select_channel: 'Boshqarish uchun quyidagi kanallardan birini tanlang:',
     manage_channel_title: '📺 **Kanal:** {title}\n\nNima qilmoqchisiz?',
+    preview_settings_btn: '👀 Preview sozlamalari',
+    preview_settings_title:
+      '👀 **Preview ruxsati**\n\nHolat: {status}\nDavomiyligi: {minutes} daqiqa\nMaks: 15 daqiqa',
+    preview_status_on: 'Yoqilgan',
+    preview_status_off: "O'chirilgan",
+    preview_set_btn: '⏱ Preview vaqtini sozlash',
+    preview_disable_btn: "🚫 Previewni o'chirish",
+    preview_enter_minutes:
+      'Preview davomiyligini daqiqalarda kiriting (1-15):\n\n⚠️ Botda **Foydalanuvchilarni cheklash/ban qilish** huquqi bo‘lishi shart.',
+    preview_invalid_minutes: "1 dan 15 gacha bo'lgan raqamni kiriting.",
+    preview_updated: '✅ Preview {minutes} daqiqaga yoqildi.',
+    preview_disabled_msg: "🚫 Ushbu kanal uchun preview o'chirildi.",
     add_plan_btn: "➕ Yangi ta'rif qo'shish",
     get_link_btn: '🔗 Obuna havolasini olish',
     back_dashboard_btn: '🔙 Panelga qaytish',
@@ -45,6 +58,7 @@ export const translations = {
     balance_title:
       "💰 **Sizning balansingiz**\n\nMavjud: {amount} UZS\n\nMablag'ni yechib olish uchun /withdraw <miqdor> buyrug'ini yuboring.",
     wallet_btn: '💰 Hamyon',
+    analytics_btn: '📊 Analitika',
     wallet_title:
       '💰 **Sizning hamyoningiz**\n\nAsosiy balans: **{amount} UZS**\n\n*Eslatma: Bu TsPay (5%) va bizning komissiyamiz (5%) yechib olingandan keyingi sof foyda.*',
     withdraw_btn: '💸 Pul yechish',
@@ -61,6 +75,14 @@ export const translations = {
     invalid_link: "❌ Havola formati noto'g'ri.",
     sub_expired:
       "⚠️ **Obuna muddati tugadi**\n\nSizning '{channel}' kanalidagi obuna vaqtingiz tugadi va siz kanaldan chiqarildingiz. Kirishni tiklash uchun qaytadan obuna bo'lishingiz mumkin.",
+    preview_not_available: '⚠️ Ushbu kanal uchun preview mavjud emas.',
+    preview_already_subscribed: '✅ Sizda ushbu kanalga faol obuna bor.',
+    preview_start:
+      '👀 Preview {minutes} daqiqaga yoqildi.\n\n[Kanalga ulanish]({link})\n\nVaqt tugagach avtomatik chiqarilasiz.',
+    preview_expired:
+      "⏳ '{channel}' kanalidagi preview vaqti tugadi. Davom etish uchun obuna bo'ling.",
+    preview_cooldown:
+      '⏳ Preview faqat 30 kunda bir marta. Qayta urinish uchun {days} kun qoldi.',
     payout_history_btn: "📊 To'liq tarix",
     full_history_title:
       "🗄 **Barcha to'lovlar tarixi**\n\nOxirgi 50 ta so'rov:",
@@ -69,6 +91,24 @@ export const translations = {
     add_channel_btn: "➕ Kanal qo'shish",
     analytics_title:
       "📊 **Kanallaringiz statistikasi**\n\n💰 Umumiy tushum: {revenue} UZS\n📈 Faol obunachilar: {active}\n🚪 Chiqib ketganlar: {churn}\n🆕 Bugun qo'shilganlar: {new_today}\n🔗 Hamkorlik o'tishlar: {ref_count}\n💸 Hamkorlik to'lovlari: {ref_payouts} UZS",
+    partner_dashboard_btn: '🤝 Hamkorlar paneli',
+    partner_dashboard_title:
+      "🤝 **Hamkorlar paneli**\n\n💰 Umumiy daromad: {earnings} UZS\n💼 Mavjud balans: {balance} UZS\n📈 Umumiy o'tishlar: {conversions}\n✅ Faol obunalar: {active}\n🆕 Bugun qo'shilganlar: {new_today}",
+    partner_no_approvals:
+      "🤝 **Hamkorlar paneli**\n\nSizda tasdiqlangan hamkorliklar yo'q.\n\nKanalni targ'ib qilish uchun so'rov yuboring va 40% komissiya oling!",
+    partner_pending_note: "⏳ Kutilayotgan so'rovlar: {pending}",
+    partner_analytics_btn: '📊 Hamkorlik statistikasi',
+    partner_links_btn: '🔗 Mening havolalarim',
+    partner_wallet_btn: '💼 Hamkor hamyoni',
+    partner_analytics_title:
+      "📊 **Hamkorlik statistikasi**\n\n💰 Umumiy daromad: {earnings} UZS\n📈 Umumiy o'tishlar: {conversions}\n✅ Faol obunalar: {active}\n🆕 Bugun qo'shilganlar: {new_today}\n\n**Kanallar bo'yicha:**",
+    partner_channel_line:
+      "- {title}: {conversions} o'tish, {earnings} UZS, {active} faol",
+    partner_links_title:
+      '🔗 **Hamkorlik havolalaringiz**\n\nKomissiya olish uchun ushbu havolalarni ulashing:',
+    partner_no_links: 'Tasdiqlangan hamkorlik topilmadi.',
+    partner_wallet_title:
+      "💼 **Hamkor hamyoni**\n\nMavjud balans: **{amount} UZS**\n\n*Eslatma: Bu TsPay (5%) va bizning komissiyamiz (5%) yechib olingandan keyingi sof daromad.*",
     referral_btn: '🤝 Hamkorlik dasturi',
     referral_title:
       "🤝 **Hamkorlik dasturi**\n\nQaysi kanalni targ'ib qilmoqchisiz? Quyidagi kanallardan birini tanlang yoki kanal ID sini yuboring.",
@@ -109,6 +149,7 @@ export const translations = {
       '📢 **Channel:** {title}\n\nChoose a subscription plan to get instant access:',
     no_plans: '\n\n⚠️ No active plans available for this channel yet.',
     buy_plan_btn: '{name} - {price} UZS',
+    preview_btn: '👀 Preview for {minutes} min',
     how_to_sub_text:
       '❓ **How to Subscribe**\n\nTo join a private channel, you must use a **Subscription Link** provided by the channel owner.\n\nOnce you click the link, I will show you the available plans and payment options.',
     pay_now_btn: '💳 Pay Now',
@@ -119,11 +160,23 @@ export const translations = {
     payment_error: '❌ Payment not found. Any issues? Contact support.',
     creator_dashboard_title: '🛠️ **Creator Dashboard**\n\n',
     no_channels:
-      "You haven't registered any channels yet.\n\n**How to add a channel?**\n1. Add this bot to your channel as an **Administrator**.\n2. Forward any message from your channel to this bot (**ensure the author/source is preserved**).",
+      "You haven't registered any channels yet.\n\n**How to add a channel?**\n1. Add this bot to your channel as an **Administrator**.\n2. Forward any message from your channel to this bot (**ensure the author/source is preserved**).\n\n⚠️ **Important:** the bot must also have **Ban/Restrict users** permission.",
     select_channel:
       'Select a channel to manage its plans and get your subscription link:',
     manage_channel_title:
       '📺 **Channel:** {title}\n\nWhat would you like to do?',
+    preview_settings_btn: '👀 Preview Settings',
+    preview_settings_title:
+      '👀 **Preview Access**\n\nStatus: {status}\nDuration: {minutes} min\nMax: 15 min',
+    preview_status_on: 'Enabled',
+    preview_status_off: 'Disabled',
+    preview_set_btn: '⏱ Set Preview Minutes',
+    preview_disable_btn: '🚫 Disable Preview',
+    preview_enter_minutes:
+      'Enter preview duration in minutes (1-15):\n\n⚠️ The bot must have **Ban/Restrict users** permission.',
+    preview_invalid_minutes: 'Please enter a number between 1 and 15.',
+    preview_updated: '✅ Preview enabled for {minutes} minutes.',
+    preview_disabled_msg: '🚫 Preview disabled for this channel.',
     add_plan_btn: '➕ Add Subscription Plan',
     get_link_btn: '🔗 Get Subscription Link',
     back_dashboard_btn: '🔙 Back to Dashboard',
@@ -142,6 +195,7 @@ export const translations = {
     balance_title:
       '💰 **Your Balance**\n\nYou have: {amount} UZS\n\nUse /withdraw <amount> to request a payout.',
     wallet_btn: '💰 Wallet',
+    analytics_btn: '📊 Analytics',
     wallet_title:
       '💰 **Your Wallet**\n\nMain Balance: **{amount} UZS**\n\n*Note: This is the net profit after TsPay (5%) and our commission (5%) have been deducted.*',
     withdraw_btn: '💸 Withdraw',
@@ -158,6 +212,15 @@ export const translations = {
     invalid_link: '❌ Invalid Link Format.',
     sub_expired:
       "⚠️ **Subscription Expired**\n\nYour access to '{channel}' has expired, and you were removed from the channel. You can resubscribe to regain access.",
+    preview_not_available: '⚠️ Preview is not available for this channel.',
+    preview_already_subscribed:
+      '✅ You already have an active subscription for this channel.',
+    preview_start:
+      '👀 Preview started for {minutes} minutes.\n\n[Join Channel]({link})\n\nYou will be removed automatically when time ends.',
+    preview_expired:
+      "⏳ Your preview for '{channel}' has ended. Subscribe to keep access.",
+    preview_cooldown:
+      '⏳ Preview is available once every 30 days. Try again in {days} day(s).',
     payout_history_btn: '📊 Full History',
     full_history_title: '🗄 **Full Payout History**\n\nLast 50 requests:',
     min_withdrawal_error: '❌ **Minimum withdrawal amount is 10,000 UZS.**',
@@ -165,6 +228,24 @@ export const translations = {
     add_channel_btn: '➕ Add Channel',
     analytics_title:
       '📊 **Your Channel Analytics**\n\n💰 Total Revenue: {revenue} UZS\n📈 Active Subscribers: {active}\n🚪 Total Churn: {churn}\n🆕 New Today: {new_today}\n🔗 Partner Conversions: {ref_count}\n💸 Partner Payouts: {ref_payouts} UZS',
+    partner_dashboard_btn: '🤝 Partner Dashboard',
+    partner_dashboard_title:
+      '🤝 **Partner Dashboard**\n\n💰 Total Earnings: {earnings} UZS\n💼 Available Balance: {balance} UZS\n📈 Total Conversions: {conversions}\n✅ Active Referrals: {active}\n🆕 New Today: {new_today}',
+    partner_no_approvals:
+      "🤝 **Partner Dashboard**\n\nYou don't have any approved partnerships yet.\n\nApply to promote a channel and start earning 40% commission!",
+    partner_pending_note: '⏳ Pending requests: {pending}',
+    partner_analytics_btn: '📊 Partner Analytics',
+    partner_links_btn: '🔗 My Links',
+    partner_wallet_btn: '💼 Partner Wallet',
+    partner_analytics_title:
+      '📊 **Partner Analytics**\n\n💰 Total Earnings: {earnings} UZS\n📈 Total Conversions: {conversions}\n✅ Active Referrals: {active}\n🆕 New Today: {new_today}\n\n**By Channel:**',
+    partner_channel_line:
+      '- {title}: {conversions} conv, {earnings} UZS, {active} active',
+    partner_links_title:
+      '🔗 **Your Partner Links**\n\nShare these links to earn commissions:',
+    partner_no_links: 'No approved partnerships found.',
+    partner_wallet_title:
+      '💼 **Partner Wallet**\n\nAvailable Balance: **{amount} UZS**\n\n*Note: This is the net profit after TsPay (5%) and platform fee (5%) have been deducted.*',
     referral_btn: '🤝 Partner Program',
     referral_title:
       '🤝 **Partner Program**\n\nWhich channel do you want to promote? Select one below or send the Channel ID.',
@@ -204,6 +285,7 @@ export const translations = {
       '📢 **Канал:** {title}\n\nВыберите тарифный план для мгновенного доступа:',
     no_plans: '\n\n⚠️ Для этого канала пока нет активных планов.',
     buy_plan_btn: '{name} - {price} UZS',
+    preview_btn: '👀 Превью на {minutes} мин',
     how_to_sub_text:
       '❓ **Как подписаться**\n\nЧтобы присоединиться к приватному каналу, вы должны использовать **ссылку на подписку**, предоставленную владельцем канала.\n\nКак только вы нажмете на ссылку, я покажу вам доступные планы и варианты оплаты.',
     pay_now_btn: '💳 Оплатить',
@@ -215,10 +297,22 @@ export const translations = {
       '❌ Оплата не найдена. Есть вопросы? Свяжитесь с поддержкой.',
     creator_dashboard_title: '🛠️ **Панель автора**\n\n',
     no_channels:
-      'Вы еще не зарегистрировали ни одного канала.\n\n**Как добавить канал?**\n1. Добавьте этого бота в свой канал в качестве **Администратора**.\n2. Перешлите любое сообщение из своего канала в этот бот (**обязательно с сохранением автора/источника**).',
+      'Вы еще не зарегистрировали ни одного канала.\n\n**Как добавить канал?**\n1. Добавьте этого бота в свой канал в качестве **Администратора**.\n2. Перешлите любое сообщение из своего канала в этот бот (**обязательно с сохранением автора/источника**).\n\n⚠️ **Важно:** у бота также должно быть право **банить/ограничивать пользователей**.',
     select_channel:
       'Выберите канал для управления планами и получения ссылки на подписку:',
     manage_channel_title: '📺 **Канал:** {title}\n\nЧто бы вы хотели сделать?',
+    preview_settings_btn: '👀 Настройки превью',
+    preview_settings_title:
+      '👀 **Превью-доступ**\n\nСтатус: {status}\nДлительность: {minutes} мин\nМакс: 15 мин',
+    preview_status_on: 'Включено',
+    preview_status_off: 'Выключено',
+    preview_set_btn: '⏱ Установить минуты превью',
+    preview_disable_btn: '🚫 Отключить превью',
+    preview_enter_minutes:
+      'Введите длительность превью в минутах (1-15):\n\n⚠️ У бота должно быть право **банить/ограничивать пользователей**.',
+    preview_invalid_minutes: 'Введите число от 1 до 15.',
+    preview_updated: '✅ Превью включено на {minutes} минут.',
+    preview_disabled_msg: '🚫 Превью для этого канала отключено.',
     add_plan_btn: '➕ Добавить план подписки',
     get_link_btn: '🔗 Получить ссылку на подписку',
     back_dashboard_btn: '🔙 Вернуться в панель',
@@ -237,6 +331,7 @@ export const translations = {
     balance_title:
       '💰 **Ваш баланс**\n\nДоступно: {amount} UZS\n\nИспользуйте /withdraw <сумма> для запроса выплаты.',
     wallet_btn: '💰 Кошелек',
+    analytics_btn: '📊 Аналитика',
     wallet_title:
       '💰 **Ваш кошелек**\n\nОсновной баланс: **{amount} UZS**\n\n*Примечание: Это чистая прибыль после вычета комиссии TsPay (5%) и нашей комиссии (5%).*',
     withdraw_btn: '💸 Вывести средства',
@@ -252,6 +347,15 @@ export const translations = {
     invalid_link: '❌ Неверный формат ссылки.',
     sub_expired:
       "⚠️ **Подписка истекла**\n\nВаше время доступа в канал '{channel}' истекло, и вы были исключены. Вы можете подписаться снова, чтобы восстановить доступ.",
+    preview_not_available: '⚠️ Превью для этого канала недоступно.',
+    preview_already_subscribed:
+      '✅ У вас уже есть активная подписка на этот канал.',
+    preview_start:
+      '👀 Превью запущено на {minutes} минут.\n\n[Вступить в канал]({link})\n\nПо окончании времени вы будете удалены автоматически.',
+    preview_expired:
+      "⏳ Время превью для '{channel}' истекло. Оформите подписку, чтобы продолжить доступ.",
+    preview_cooldown:
+      '⏳ Превью доступно раз в 30 дней. Повторите через {days} дн.',
     payout_history_btn: '📊 Полная история',
     full_history_title:
       '🗄 **Полная история выплат**\n\nПоследние 50 запросов:',
@@ -260,6 +364,24 @@ export const translations = {
     add_channel_btn: '➕ Добавить канал',
     analytics_title:
       '📊 **Аналитика ваших каналов**\n\n💰 Общий доход: {revenue} UZS\n📈 Активные подписчики: {active}\n🚪 Ушедшие: {churn}\n🆕 Новые сегодня: {new_today}\n🔗 Партнерские конверсии: {ref_count}\n💸 Партнерские выплаты: {ref_payouts} UZS',
+    partner_dashboard_btn: '🤝 Панель партнера',
+    partner_dashboard_title:
+      '🤝 **Панель партнера**\n\n💰 Общий доход: {earnings} UZS\n💼 Доступный баланс: {balance} UZS\n📈 Всего конверсий: {conversions}\n✅ Активные подписки: {active}\n🆕 Новые сегодня: {new_today}',
+    partner_no_approvals:
+      '🤝 **Панель партнера**\n\nУ вас пока нет одобренных партнерств.\n\nПодайте заявку на продвижение канала и зарабатывайте 40% комиссии!',
+    partner_pending_note: '⏳ Ожидающие заявки: {pending}',
+    partner_analytics_btn: '📊 Партнерская аналитика',
+    partner_links_btn: '🔗 Мои ссылки',
+    partner_wallet_btn: '💼 Кошелек партнера',
+    partner_analytics_title:
+      '📊 **Партнерская аналитика**\n\n💰 Общий доход: {earnings} UZS\n📈 Всего конверсий: {conversions}\n✅ Активные подписки: {active}\n🆕 Новые сегодня: {new_today}\n\n**По каналам:**',
+    partner_channel_line:
+      '- {title}: {conversions} конв., {earnings} UZS, {active} актив.',
+    partner_links_title:
+      '🔗 **Ваши партнерские ссылки**\n\nДелитесь этими ссылками, чтобы получать комиссию:',
+    partner_no_links: 'Одобренные партнерства не найдены.',
+    partner_wallet_title:
+      '💼 **Кошелек партнера**\n\nДоступный баланс: **{amount} UZS**\n\n*Примечание: Это чистый доход после комиссии TsPay (5%) и нашей комиссии (5%).*',
     referral_btn: '🤝 Партнерская программа',
     referral_title:
       '🤝 **Партнерская программа**\n\nКакой канал вы хотите продвигать? Выберите канал ниже или отправьте ID канала.',

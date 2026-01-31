@@ -1,11 +1,13 @@
 import { Worker } from 'bullmq';
 import IORedis from 'ioredis';
 import { SubscriptionRepository } from '../core/subscription.repo';
+import { PreviewRepository } from '../core/preview.repo';
 import { bot } from '../bot/bot';
 import { Language, t } from '../bot/i18n';
 import { LoggerService } from '../core/logger.service';
 
 const subRepo = new SubscriptionRepository();
+const previewRepo = new PreviewRepository();
 
 /**
  * Checks for expired subscriptions and kicks users.
@@ -14,6 +16,8 @@ const subRepo = new SubscriptionRepository();
 export async function checkExpirations() {
   console.log('Worker: Checking expirations and reminders...');
   try {
+    await enforcePreviewExpirations();
+
     // 1. Kicking expired users
     const expiredSubs = await subRepo.findExpiredActiveSubscriptions();
     if (expiredSubs.length > 0) {
@@ -71,6 +75,62 @@ export async function checkExpirations() {
   }
 }
 
+async function enforcePreviewExpirations() {
+  try {
+    const expiredPreviews = await previewRepo.findExpiredActivePreviews();
+    if (expiredPreviews.length === 0) return;
+
+    console.log(`Worker: Found ${expiredPreviews.length} expired previews.`);
+
+    for (const preview of expiredPreviews) {
+      try {
+        const hasActiveSub = await subRepo.hasActiveSubscription(
+          preview.userId,
+          preview.channelId
+        );
+
+        if (hasActiveSub) {
+          await previewRepo.updateStatus(preview.id, 'CONVERTED');
+          continue;
+        }
+
+        const channelId = preview.channel.telegramChannelId;
+        const userId = preview.user.telegramId;
+        const lang = ((preview.user as any).language as Language) || 'en';
+
+        await bot.api.banChatMember(Number(channelId), Number(userId));
+        await bot.api.unbanChatMember(Number(channelId), Number(userId));
+
+        if (preview.inviteLink) {
+          await bot.api
+            .revokeChatInviteLink(Number(channelId), preview.inviteLink)
+            .catch(() => {});
+        }
+
+        await previewRepo.updateStatus(preview.id, 'EXPIRED');
+
+        const message = t(lang, 'preview_expired', {
+          channel: preview.channel.title,
+        });
+        await bot.api
+          .sendMessage(Number(userId), message, { parse_mode: 'Markdown' })
+          .catch(() => {});
+
+        console.log(
+          `Worker: Preview expired for user ${userId} in channel ${preview.channelId}`
+        );
+      } catch (e: any) {
+        console.error(
+          `Worker: Failed to enforce preview expiration ${preview.id}:`,
+          e.message
+        );
+      }
+    }
+  } catch (e) {
+    console.error('Worker: Failed to process preview expirations:', e);
+  }
+}
+
 async function sendReminders(
   days: number,
   translationKey: 'reminder_1d' | 'reminder_3d'
@@ -125,7 +185,7 @@ export const expirationWorker = new Worker(
 );
 
 // For immediate fail-safe without requiring Redis/BullMQ during dev/simple VPS:
-export function startExpirationCron(intervalMs: number = 60 * 60 * 1000) {
+export function startExpirationCron(intervalMs: number = 60 * 1000) {
   console.log(
     `Worker: Starting expiration cron every ${intervalMs / 1000 / 60} minutes.`
   );

@@ -19,6 +19,7 @@ model User {
   creator       Creator?
   subscriptions Subscription[]
   partnerAccess Partner[] // Tracks channels this user is a partner for
+  previewAccesses PreviewAccess[]
 }
 
 model Creator {
@@ -38,10 +39,13 @@ model Channel {
   creatorId         Int
   creator           Creator @relation(fields: [creatorId], references: [id])
   commissionRate    Float   @default(0.05) // Our platform fee (default 5%)
+  previewEnabled    Boolean @default(false)
+  previewDurationMin Int    @default(0)
 
   plans         SubscriptionPlan[]
   subscriptions Subscription[]
   partners      Partner[]
+  previewAccesses PreviewAccess[]
 }
 
 model Partner {
@@ -101,6 +105,25 @@ model Subscription {
   transactions Transaction[]
 }
 
+model PreviewAccess {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  channelId Int
+  channel   Channel  @relation(fields: [channelId], references: [id])
+
+  status     String   @default("ACTIVE") // ACTIVE, EXPIRED, CONVERTED, REVOKED
+  inviteLink String?
+  startDate  DateTime @default(now())
+  endDate    DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, channelId])
+  @@index([status, endDate])
+}
+
 model Transaction {
   id             String       @id @default(uuid())
   subscriptionId Int
@@ -150,5 +173,4 @@ model Payout {
 
   transactions Transaction[]
 }
-
 
