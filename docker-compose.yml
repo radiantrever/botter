@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: postgres:18.1-alpine
     container_name: botter_db
     environment:
       POSTGRES_USER: postgres
@@ -15,7 +15,7 @@ services:
     restart: always
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.2.8-alpine
     container_name: botter_redis
     ports:
       - "6379:6379"

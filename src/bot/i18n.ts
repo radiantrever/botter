@@ -87,10 +87,55 @@ export const translations = {
     full_history_title:
       "🗄 **Barcha to'lovlar tarixi**\n\nOxirgi 50 ta so'rov:",
     min_withdrawal_error: '❌ **Minimal yechib olish miqdori 10,000 UZS.**',
+    min_payment_error: '❌ **Minimal to‘lov miqdori 1,000 UZS.**',
     main_menu_btn: '🏠 Asosiy menyu',
     add_channel_btn: "➕ Kanal qo'shish",
     analytics_title:
       "📊 **Kanallaringiz statistikasi**\n\n💰 Umumiy tushum: {revenue} UZS\n📈 Faol obunachilar: {active}\n🚪 Chiqib ketganlar: {churn}\n🆕 Bugun qo'shilganlar: {new_today}\n🔗 Hamkorlik o'tishlar: {ref_count}\n💸 Hamkorlik to'lovlari: {ref_payouts} UZS",
+    bundles_btn: '📦 Bundllar',
+    bundles_title: '📦 **Bundllar**\n\nQaysi bundlni boshqaramiz?',
+    no_bundles:
+      "📦 **Bundllar**\n\nSizda hozircha bundl yo'q. Yangi bundl yarating va bir nechta kanallarni bitta tarif ostida soting.",
+    create_bundle_btn: '➕ Bundl yaratish',
+    bundle_create_prompt:
+      "📦 **Yangi bundl**\n\nBundl nomini kiriting (masalan, 'VIP Paket'):",
+    bundle_created: "✅ **Bundl yaratildi!**\n\nNomi: {title}",
+    bundle_manage_btn: '📦 Bundlni boshqarish',
+    bundle_manage_hint: 'Bundl boshqaruviga qayting:',
+    bundle_details_title:
+      '📦 **Bundl:** {title}\n\n📺 Kanallar: {channels}\n🏷 Tariflar: {plans}',
+    bundle_channels_title: 'Bundldagi kanallar:',
+    bundle_add_channel_btn: '➕ Kanal qo‘shish',
+    bundle_set_folder_btn: '📁 Folder link qo‘shish',
+    bundle_add_plan_btn: '🏷 Tarif qo‘shish',
+    bundle_get_link_btn: '🔗 Bundl havolasi',
+    bundle_add_channel_title:
+      'Bundlga qo‘shish uchun kanalni tanlang:',
+    bundle_channel_added: '✅ Kanal bundlga qo‘shildi.',
+    bundle_admin_reminder:
+      "⚠️ Eslatma: Botni bundldagi barcha kanallarga administrator qilib qo‘ying va **ban users** huquqini ham bering.",
+    bundle_set_folder_prompt:
+      '📁 Folder invite link yuboring (Telegram folder link). Bu kanal ro‘yxatini avtomatik olib kelmaydi — kanallarni qo‘lda qo‘shing.',
+    bundle_folder_saved: '✅ Folder link saqlandi.',
+    bundle_plan_name_prompt:
+      "🏷 Bundl tarif nomini kiriting (masalan, 'Oylik'):",
+    bundle_plan_created: '✅ Bundl tarifi yaratildi.',
+    bundle_link_title:
+      '🔗 **Bundl havolasi:**\n\n`{link}`\n\nUshbu havola orqali foydalanuvchilar bundl tariflarini ko‘rishadi.',
+    bundle_folder_link: '📁 Folder link: {link}',
+    bundle_choose_plan:
+      '📦 **Bundl:** {title}\n\nBundlga kirish uchun tarifni tanlang:',
+    no_bundle_plans: '\n\n⚠️ Bundl uchun faol tariflar yo‘q.',
+    bundle_not_found:
+      '❌ **Bundl topilmadi**\n\nHavola eskirgan yoki bundl o‘chirib tashlangan bo‘lishi mumkin.',
+    bundle_payment_confirmed:
+      '✅ To‘lov tasdiqlandi!\n\nQuyidagi havolalar orqali kanallarga kiring:',
+    bundle_link_failed:
+      'Havola yaratib bo‘lmadi. Kanal adminlarini tekshiring.',
+    bundle_folder_share: '📁 Folder havolasi: {link}',
+    bundle_cooldown_reminder:
+      '⏳ Eslatma: Telegram tez-tez urinishlarda cheklov qo‘yishi mumkin. Iltimos, qayta urinish uchun biroz kuting.',
+    invalid_text: 'Iltimos, to‘g‘ri matn kiriting.',
     partner_dashboard_btn: '🤝 Hamkorlar paneli',
     partner_dashboard_title:
       "🤝 **Hamkorlar paneli**\n\n💰 Umumiy daromad: {earnings} UZS\n💼 Mavjud balans: {balance} UZS\n📈 Umumiy o'tishlar: {conversions}\n✅ Faol obunalar: {active}\n🆕 Bugun qo'shilganlar: {new_today}",
@@ -224,10 +269,54 @@ export const translations = {
     payout_history_btn: '📊 Full History',
     full_history_title: '🗄 **Full Payout History**\n\nLast 50 requests:',
     min_withdrawal_error: '❌ **Minimum withdrawal amount is 10,000 UZS.**',
+    min_payment_error: '❌ **Minimum payment amount is 1,000 UZS.**',
     main_menu_btn: '🏠 Main Menu',
     add_channel_btn: '➕ Add Channel',
     analytics_title:
       '📊 **Your Channel Analytics**\n\n💰 Total Revenue: {revenue} UZS\n📈 Active Subscribers: {active}\n🚪 Total Churn: {churn}\n🆕 New Today: {new_today}\n🔗 Partner Conversions: {ref_count}\n💸 Partner Payouts: {ref_payouts} UZS',
+    bundles_btn: '📦 Bundles',
+    bundles_title: '📦 **Bundles**\n\nSelect a bundle to manage:',
+    no_bundles:
+      "📦 **Bundles**\n\nYou don't have any bundles yet. Create one to sell multiple channels under a single tariff.",
+    create_bundle_btn: '➕ Create Bundle',
+    bundle_create_prompt:
+      "📦 **New Bundle**\n\nEnter a bundle name (e.g., 'VIP Pack'):",
+    bundle_created: '✅ **Bundle Created!**\n\nName: {title}',
+    bundle_manage_btn: '📦 Manage Bundle',
+    bundle_manage_hint: 'Return to bundle management:',
+    bundle_details_title:
+      '📦 **Bundle:** {title}\n\n📺 Channels: {channels}\n🏷 Plans: {plans}',
+    bundle_channels_title: 'Channels in this bundle:',
+    bundle_add_channel_btn: '➕ Add Channel',
+    bundle_set_folder_btn: '📁 Set Folder Link',
+    bundle_add_plan_btn: '🏷 Add Plan',
+    bundle_get_link_btn: '🔗 Bundle Link',
+    bundle_add_channel_title: 'Select a channel to add:',
+    bundle_channel_added: '✅ Channel added to bundle.',
+    bundle_admin_reminder:
+      '⚠️ Reminder: Add the bot as admin in every bundle channel and grant **ban users** permission.',
+    bundle_set_folder_prompt:
+      "📁 Send the Telegram folder invite link for this bundle. It won't auto-import channels — please add channels manually.",
+    bundle_folder_saved: '✅ Folder link saved.',
+    bundle_plan_name_prompt:
+      "🏷 Enter bundle plan name (e.g., 'Monthly'):",
+    bundle_plan_created: '✅ Bundle plan created.',
+    bundle_link_title:
+      '🔗 **Bundle Link:**\n\n`{link}`\n\nShare this link so users can view bundle plans.',
+    bundle_folder_link: '📁 Folder link: {link}',
+    bundle_choose_plan:
+      '📦 **Bundle:** {title}\n\nChoose a plan to access all channels:',
+    no_bundle_plans: '\n\n⚠️ No active plans for this bundle yet.',
+    bundle_not_found:
+      '❌ **Bundle Not Found**\n\nThe link might be old or the bundle was removed.',
+    bundle_payment_confirmed:
+      '✅ Payment confirmed!\n\nUse the links below to join each channel:',
+    bundle_link_failed:
+      'Failed to create link. Please check channel admin settings.',
+    bundle_folder_share: '📁 Folder link: {link}',
+    bundle_cooldown_reminder:
+      '⏳ Note: Telegram may rate-limit if you try multiple times quickly. Please wait a bit before retrying.',
+    invalid_text: 'Please enter valid text.',
     partner_dashboard_btn: '🤝 Partner Dashboard',
     partner_dashboard_title:
       '🤝 **Partner Dashboard**\n\n💰 Total Earnings: {earnings} UZS\n💼 Available Balance: {balance} UZS\n📈 Total Conversions: {conversions}\n✅ Active Referrals: {active}\n🆕 New Today: {new_today}',
@@ -360,10 +449,54 @@ export const translations = {
     full_history_title:
       '🗄 **Полная история выплат**\n\nПоследние 50 запросов:',
     min_withdrawal_error: '❌ **Минимальная сумма для вывода — 10 000 UZS.**',
+    min_payment_error: '❌ **Минимальная сумма оплаты — 1 000 UZS.**',
     main_menu_btn: '🏠 Главное меню',
     add_channel_btn: '➕ Добавить канал',
     analytics_title:
       '📊 **Аналитика ваших каналов**\n\n💰 Общий доход: {revenue} UZS\n📈 Активные подписчики: {active}\n🚪 Ушедшие: {churn}\n🆕 Новые сегодня: {new_today}\n🔗 Партнерские конверсии: {ref_count}\n💸 Партнерские выплаты: {ref_payouts} UZS',
+    bundles_btn: '📦 Бандлы',
+    bundles_title: '📦 **Бандлы**\n\nВыберите бандл для управления:',
+    no_bundles:
+      '📦 **Бандлы**\n\nУ вас пока нет бандлов. Создайте один, чтобы продавать несколько каналов по одному тарифу.',
+    create_bundle_btn: '➕ Создать бандл',
+    bundle_create_prompt:
+      "📦 **Новый бандл**\n\nВведите название бандла (например, 'VIP Пакет'):",
+    bundle_created: '✅ **Бандл создан!**\n\nНазвание: {title}',
+    bundle_manage_btn: '📦 Управлять бандлом',
+    bundle_manage_hint: 'Вернуться к управлению бандлом:',
+    bundle_details_title:
+      '📦 **Бандл:** {title}\n\n📺 Каналы: {channels}\n🏷 Тарифы: {plans}',
+    bundle_channels_title: 'Каналы в бандле:',
+    bundle_add_channel_btn: '➕ Добавить канал',
+    bundle_set_folder_btn: '📁 Указать folder link',
+    bundle_add_plan_btn: '🏷 Добавить тариф',
+    bundle_get_link_btn: '🔗 Ссылка бандла',
+    bundle_add_channel_title: 'Выберите канал для добавления:',
+    bundle_channel_added: '✅ Канал добавлен в бандл.',
+    bundle_admin_reminder:
+      '⚠️ Напоминание: добавьте бота администратором во все каналы бандла и дайте право **ban users**.',
+    bundle_set_folder_prompt:
+      '📁 Отправьте Telegram folder invite link для бандла. Он не импортирует каналы автоматически — добавьте каналы вручную.',
+    bundle_folder_saved: '✅ Folder link сохранен.',
+    bundle_plan_name_prompt:
+      "🏷 Введите название тарифа бандла (например, 'Месячный'):",
+    bundle_plan_created: '✅ Тариф бандла создан.',
+    bundle_link_title:
+      '🔗 **Ссылка бандла:**\n\n`{link}`\n\nПоделитесь этой ссылкой, чтобы пользователи увидели тарифы.',
+    bundle_folder_link: '📁 Folder link: {link}',
+    bundle_choose_plan:
+      '📦 **Бандл:** {title}\n\nВыберите тариф для доступа ко всем каналам:',
+    no_bundle_plans: '\n\n⚠️ Для этого бандла нет активных тарифов.',
+    bundle_not_found:
+      '❌ **Бандл не найден**\n\nСсылка могла устареть или бандл был удален.',
+    bundle_payment_confirmed:
+      '✅ Оплата подтверждена!\n\nИспользуйте ссылки ниже для входа в каналы:',
+    bundle_link_failed:
+      'Не удалось создать ссылку. Проверьте права бота в канале.',
+    bundle_folder_share: '📁 Folder link: {link}',
+    bundle_cooldown_reminder:
+      '⏳ Примечание: Telegram может ограничить частые попытки. Подождите немного перед повтором.',
+    invalid_text: 'Пожалуйста, введите корректный текст.',
     partner_dashboard_btn: '🤝 Панель партнера',
     partner_dashboard_title:
       '🤝 **Панель партнера**\n\n💰 Общий доход: {earnings} UZS\n💼 Доступный баланс: {balance} UZS\n📈 Всего конверсий: {conversions}\n✅ Активные подписки: {active}\n🆕 Новые сегодня: {new_today}',

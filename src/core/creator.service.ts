@@ -334,4 +334,111 @@ export class CreatorService {
       include: { user: true },
     });
   }
+
+  async listBundles(telegramId: bigint) {
+    const creator = await creatorRepo.findByTelegramId(telegramId);
+    if (!creator) return [];
+
+    return prisma.bundle.findMany({
+      where: { creatorId: creator.id },
+      include: {
+        channels: { include: { channel: true } },
+        plans: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async createBundle(telegramId: bigint, title: string) {
+    const creator = await creatorRepo.findByTelegramId(telegramId);
+    if (!creator) throw new Error('Creator not found');
+
+    return prisma.bundle.create({
+      data: {
+        creatorId: creator.id,
+        title,
+      },
+    });
+  }
+
+  async getBundle(telegramId: bigint, bundleId: number) {
+    const creator = await creatorRepo.findByTelegramId(telegramId);
+    if (!creator) throw new Error('Creator not found');
+
+    const bundle = await prisma.bundle.findUnique({
+      where: { id: bundleId },
+      include: {
+        channels: { include: { channel: true } },
+        plans: true,
+      },
+    });
+
+    if (!bundle || bundle.creatorId !== creator.id) {
+      throw new Error('Unauthorized or bundle not found');
+    }
+
+    return bundle;
+  }
+
+  async addChannelToBundle(
+    telegramId: bigint,
+    bundleId: number,
+    channelId: number
+  ) {
+    const creator = await creatorRepo.findByTelegramId(telegramId);
+    if (!creator) throw new Error('Creator not found');
+
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+    });
+    if (!channel || channel.creatorId !== creator.id) {
+      throw new Error('Channel not found or unauthorized');
+    }
+
+    await this.getBundle(telegramId, bundleId);
+
+    return prisma.bundleChannel.upsert({
+      where: {
+        bundleId_channelId: {
+          bundleId,
+          channelId,
+        },
+      },
+      update: {},
+      create: {
+        bundleId,
+        channelId,
+      },
+    });
+  }
+
+  async setBundleFolderLink(
+    telegramId: bigint,
+    bundleId: number,
+    folderLink: string
+  ) {
+    await this.getBundle(telegramId, bundleId);
+    return prisma.bundle.update({
+      where: { id: bundleId },
+      data: { folderLink },
+    });
+  }
+
+  async createBundlePlan(
+    telegramId: bigint,
+    bundleId: number,
+    name: string,
+    price: number,
+    durationDay: number
+  ) {
+    await this.getBundle(telegramId, bundleId);
+    return prisma.bundlePlan.create({
+      data: {
+        bundleId,
+        name,
+        price,
+        durationDay,
+      },
+    });
+  }
 }

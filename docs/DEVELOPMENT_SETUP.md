@@ -1,11 +1,14 @@
 # Development Environment Setup
 
-This document provides instructions for setting up a development environment for the Telegram Paywall Platform.
+This document provides instructions for setting up a development environment for
+the Telegram Paywall Platform.
 
 ## 🛠️ Prerequisites
 
 ### System Requirements
-- **Operating System**: Windows 10+, macOS 10.15+, or Linux (Ubuntu 20.04+ recommended)
+
+- **Operating System**: Windows 10+, macOS 10.15+, or Linux (Ubuntu 20.04+
+  recommended)
 - **RAM**: 8 GB minimum, 16 GB recommended
 - **Disk Space**: 10 GB available space
 - **Processor**: Multi-core processor (Intel i5 or equivalent)
@@ -71,6 +74,7 @@ code .env  # Opens in VS Code
 ```
 
 **Required Environment Variables:**
+
 ```env
 # Bot Configuration
 BOT_TOKEN=your_telegram_bot_token_here
@@ -261,17 +265,17 @@ Create test files with `.spec.ts` or `.test.ts` extension:
 
 ```typescript
 // Example: src/core/user.service.spec.ts
-import { UserService } from './user.service';
+import { UserService } from "./user.service";
 
-describe('UserService', () => {
+describe("UserService", () => {
   let userService: UserService;
 
   beforeEach(() => {
     userService = new UserService();
   });
 
-  describe('getUserById', () => {
-    it('should return user when found', async () => {
+  describe("getUserById", () => {
+    it("should return user when found", async () => {
       // Test implementation
     });
   });
@@ -284,14 +288,14 @@ Place integration tests in `tests/integration/`:
 
 ```typescript
 // Example: tests/integration/bot.handler.integration.test.ts
-import { Bot } from 'grammy';
-import { creatorHandler } from '../../src/bot/handlers/creator';
+import { Bot } from "grammy";
+import { creatorHandler } from "../../src/bot/handlers/creator";
 
-describe('Bot Integration Tests', () => {
+describe("Bot Integration Tests", () => {
   let bot: Bot;
 
   beforeEach(() => {
-    bot = new Bot('test-token');
+    bot = new Bot("test-token");
     bot.use(creatorHandler);
   });
 
@@ -330,7 +334,7 @@ docker-compose logs -f app
 Create `docker-compose.dev.yml` for development:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   app:
     build: .
@@ -348,7 +352,7 @@ services:
       - redis
 
   db:
-    image: postgres:15-alpine
+    image: postgres:18.1-alpine
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
@@ -359,7 +363,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.2.8-alpine
     ports:
       - "6379:6379"
 
@@ -370,11 +374,13 @@ volumes:
 ## 🔒 Security Considerations
 
 ### Environment Variables
+
 - Never commit `.env` files to version control
 - Use different tokens for development and production
 - Rotate tokens regularly
 
 ### Code Security
+
 - Validate all user inputs
 - Use parameterized queries to prevent SQL injection
 - Implement proper authentication and authorization
@@ -394,7 +400,7 @@ volumes:
    ```bash
    # Ensure Docker services are running
    docker-compose ps
-   
+
    # Restart services
    docker-compose restart
    ```
@@ -409,7 +415,7 @@ volumes:
    ```bash
    # Check what's using port 3000
    lsof -i :3000
-   
+
    # Kill process if needed
    kill -9 $(lsof -t -i:3000)
    ```
@@ -418,12 +424,12 @@ volumes:
    ```bash
    # Check for TypeScript errors
    npx tsc --noEmit
-   
+
    # Clear TypeScript cache
    rm -rf node_modules/.cache
    ```
 
 ---
 
-*Last updated: January 2026*
-*For additional help, refer to the [Troubleshooting Guide](../docs/TROUBLESHOOTING.md)*
+_Last updated: January 2026_ _For additional help, refer to the
+[Troubleshooting Guide](../docs/TROUBLESHOOTING.md)_

@@ -1,6 +1,7 @@
 # 🚀 Deployment Guide
 
-This guide covers various deployment scenarios for the Telegram Paywall Platform, from local development to production environments.
+This guide covers various deployment scenarios for the Telegram Paywall
+Platform, from local development to production environments.
 
 ## 📋 Table of Contents
 
@@ -128,7 +129,7 @@ CMD ["npm", "start"]
 Create `docker-compose.prod.yml`:
 
 ```yaml
-version: '3.8'
+version: "3.8"
 
 services:
   app:
@@ -151,7 +152,7 @@ services:
       - botter-network
 
   db:
-    image: postgres:15-alpine
+    image: postgres:18.1-alpine
     container_name: botter_db
     environment:
       - POSTGRES_USER=postgres
@@ -167,7 +168,7 @@ services:
       - botter-network
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.2.8-alpine
     container_name: botter_redis
     volumes:
       - redis_data:/data
@@ -229,6 +230,7 @@ docker-compose -f docker-compose.prod.yml up -d
 ### Production Environment Setup
 
 1. **Server Preparation**
+
 ```bash
 # Update system
 sudo apt update && sudo apt upgrade -y
@@ -242,6 +244,7 @@ sudo systemctl enable docker
 ```
 
 2. **Application Deployment**
+
 ```bash
 # Create deployment directory
 sudo mkdir -p /opt/botter
@@ -268,6 +271,7 @@ chmod 600 .env
 ```
 
 3. **SSL Certificate Setup**
+
 ```bash
 # Obtain SSL certificate
 sudo certbot certonly --standalone -d yourdomain.com
@@ -278,6 +282,7 @@ sudo crontab -e
 ```
 
 4. **Production Docker Setup**
+
 ```bash
 # Create production docker-compose
 cat > docker-compose.prod.yml << EOF
@@ -298,7 +303,7 @@ services:
       - backend
 
   db:
-    image: postgres:15-alpine
+    image: postgres:18.1-alpine
     restart: unless-stopped
     environment:
       - POSTGRES_DB=botter_db
@@ -311,7 +316,7 @@ services:
       - backend
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.2.8-alpine
     restart: unless-stopped
     volumes:
       - redis_data:/data
@@ -389,34 +394,34 @@ spec:
         app: botter-app
     spec:
       containers:
-      - name: app
-        image: your-registry/botter:latest
-        ports:
-        - containerPort: 3000
-        envFrom:
-        - configMapRef:
-            name: app-config
-        - secretRef:
-            name: app-secrets
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3000
-          initialDelaySeconds: 5
-          periodSeconds: 5
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
+        - name: app
+          image: your-registry/botter:latest
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
 ```
 
 ### Kubernetes Service
@@ -432,9 +437,9 @@ spec:
   selector:
     app: botter-app
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 3000
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
   type: ClusterIP
 ```
 
@@ -452,20 +457,20 @@ metadata:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   tls:
-  - hosts:
-    - yourdomain.com
-    secretName: botter-tls
+    - hosts:
+        - yourdomain.com
+      secretName: botter-tls
   rules:
-  - host: yourdomain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: botter-app
-            port:
-              number: 80
+    - host: yourdomain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: botter-app
+                port:
+                  number: 80
 ```
 
 ### Deployment Commands
@@ -594,35 +599,35 @@ Add to your application:
 
 ```typescript
 // src/routes/health.ts
-import { Router } from 'express';
+import { Router } from "express";
 
 const router = Router();
 
-router.get('/health', async (req, res) => {
+router.get("/health", async (req, res) => {
   try {
     // Check database connection
     await prisma.$queryRaw`SELECT 1`;
-    
+
     // Check Redis connection
     await redis.ping();
-    
+
     // Check TsPay API
     // await tspay.checkHealth();
-    
+
     res.status(200).json({
-      status: 'healthy',
+      status: "healthy",
       timestamp: new Date().toISOString(),
       services: {
-        database: 'healthy',
-        redis: 'healthy',
-        tspay: 'healthy'
-      }
+        database: "healthy",
+        redis: "healthy",
+        tspay: "healthy",
+      },
     });
   } catch (error) {
     res.status(503).json({
-      status: 'unhealthy',
+      status: "unhealthy",
       timestamp: new Date().toISOString(),
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -669,18 +674,18 @@ spec:
   minReplicas: 2
   maxReplicas: 10
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 70
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
 ```
 
 ## 🔧 Troubleshooting Deployment Issues
@@ -688,6 +693,7 @@ spec:
 ### Common Issues and Solutions
 
 1. **Database Connection Failed**
+
 ```bash
 # Check database service
 docker-compose exec db pg_isready
@@ -697,18 +703,21 @@ echo $DATABASE_URL
 ```
 
 2. **Redis Connection Issues**
+
 ```bash
 # Test Redis connection
 docker-compose exec redis redis-cli ping
 ```
 
 3. **Port Conflicts**
+
 ```bash
 # Check used ports
 sudo netstat -tlnp | grep :3000
 ```
 
 4. **SSL Certificate Issues**
+
 ```bash
 # Test certificate
 openssl x509 -in /etc/letsencrypt/live/yourdomain.com/fullchain.pem -text
@@ -728,4 +737,5 @@ kubectl rollout undo deployment/botter-app
 
 ---
 
-*For additional support, refer to the [Troubleshooting Guide](TROUBLESHOOTING.md) or contact the development team.*
+_For additional support, refer to the
+[Troubleshooting Guide](TROUBLESHOOTING.md) or contact the development team._

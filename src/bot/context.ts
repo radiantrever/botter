@@ -11,6 +11,16 @@ export interface SessionData {
     price?: number;
     duration?: number;
   };
+  tempBundle?: {
+    bundleId?: number;
+    title?: string;
+  };
+  tempBundlePlan?: {
+    bundleId?: number;
+    name?: string;
+    price?: number;
+    duration?: number;
+  };
   tempPreview?: {
     channelId?: number;
   };

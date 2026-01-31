@@ -21,14 +21,14 @@ services:
     networks:
       - botter-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health"]
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
 
   db:
-    image: postgres:15-alpine
+    image: postgres:18.1-alpine
     container_name: botter_db
     environment:
       - POSTGRES_USER=postgres
@@ -43,13 +43,13 @@ services:
     networks:
       - botter-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
 
   redis:
-    image: redis:7-alpine
+    image: redis:7.2.8-alpine
     container_name: botter_redis
     volumes:
       - redis_data:/data

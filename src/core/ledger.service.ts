@@ -108,6 +108,40 @@ export class LedgerService {
     });
   }
 
+  async recordBundleTransaction(
+    bundleSubscriptionId: number,
+    grossAmount: number,
+    creatorId: number,
+    platformPercent: number = FEES.PLATFORM_PERCENT
+  ) {
+    const { providerFee, platformFee, creatorShare } = this.calculateFees(
+      grossAmount,
+      platformPercent,
+      0
+    );
+
+    return prisma.$transaction(async (tx: any) => {
+      const transaction = await tx.bundleTransaction.create({
+        data: {
+          bundleSubId: bundleSubscriptionId,
+          grossAmount,
+          providerFee,
+          platformFee,
+          creatorShare,
+          status: 'COMPLETED',
+        },
+      });
+
+      await tx.creatorBalance.upsert({
+        where: { creatorId },
+        update: { availableBalance: { increment: creatorShare } },
+        create: { creatorId, availableBalance: creatorShare },
+      });
+
+      return transaction;
+    });
+  }
+
   async getBalance(creatorId: number) {
     const balance = await prisma.creatorBalance.findUnique({
       where: { creatorId },

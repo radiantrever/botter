@@ -32,6 +32,7 @@ composer.command('dashboard', async ctx => {
 
     keyboard.text(context.t('wallet_btn'), 'wallet').row();
     keyboard.text(context.t('add_channel_btn'), 'add_channel_info').row();
+    keyboard.text(context.t('bundles_btn'), 'manage_bundles').row();
     keyboard.text(context.t('main_menu_btn'), 'main_menu').row();
 
     await ctx.reply(text, { reply_markup: keyboard, parse_mode: 'Markdown' });
@@ -90,6 +91,7 @@ composer.callbackQuery('dashboard', async ctx => {
   keyboard.text(context.t('analytics_btn'), 'analytics').row();
   keyboard.text(context.t('manage_partners_btn'), 'manage_partners').row();
   keyboard.text(context.t('add_channel_btn'), 'add_channel_info').row();
+  keyboard.text(context.t('bundles_btn'), 'manage_bundles').row();
   keyboard.text(context.t('main_menu_btn'), 'main_menu').row();
 
   await ctx.editMessageText(text, {
@@ -127,6 +129,205 @@ composer.callbackQuery('manage_partners', async ctx => {
     await ctx.editMessageText(text, {
       reply_markup: keyboard,
       parse_mode: 'Markdown',
+    });
+  } catch (e) {
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
+composer.callbackQuery('manage_bundles', async ctx => {
+  const context = ctx as MyContextWithI18n;
+  await ctx.answerCallbackQuery();
+
+  try {
+    const bundles = await creatorService.listBundles(BigInt(ctx.from!.id));
+
+    let text = context.t('bundles_title');
+    if (bundles.length === 0) {
+      text = context.t('no_bundles');
+    }
+
+    const keyboard = new InlineKeyboard();
+    for (const bundle of bundles) {
+      keyboard.text(`📦 ${bundle.title}`, `manage_bundle_${bundle.id}`).row();
+    }
+
+    keyboard.text(context.t('create_bundle_btn'), 'create_bundle').row();
+    keyboard.text(context.t('back_dashboard_btn'), 'dashboard');
+
+    await ctx.editMessageText(text, {
+      reply_markup: keyboard,
+      parse_mode: 'Markdown',
+    });
+  } catch (e) {
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
+composer.callbackQuery('create_bundle', async ctx => {
+  const context = ctx as MyContextWithI18n;
+  await ctx.answerCallbackQuery();
+  ctx.session.step = 'creating_bundle_title';
+  await ctx.reply(context.t('bundle_create_prompt'), { parse_mode: 'Markdown' });
+});
+
+composer.callbackQuery(/manage_bundle_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const bundleId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  try {
+    const bundle = await creatorService.getBundle(
+      BigInt(ctx.from!.id),
+      bundleId
+    );
+
+    let text = context.t('bundle_details_title', {
+      title: bundle.title,
+      channels: bundle.channels.length.toLocaleString(),
+      plans: bundle.plans.length.toLocaleString(),
+    });
+
+    if (bundle.channels.length > 0) {
+      text += `\n\n${context.t('bundle_channels_title')}`;
+      for (const item of bundle.channels) {
+        text += `\n- ${item.channel.title}`;
+      }
+    }
+
+    if (bundle.folderLink) {
+      text += `\n\n${context.t('bundle_folder_link', {
+        link: bundle.folderLink,
+      })}`;
+    }
+
+    const keyboard = new InlineKeyboard()
+      .text(context.t('bundle_add_channel_btn'), `bundle_add_channel_${bundleId}`)
+      .row()
+      .text(context.t('bundle_set_folder_btn'), `bundle_set_folder_${bundleId}`)
+      .row()
+      .text(context.t('bundle_add_plan_btn'), `bundle_add_plan_${bundleId}`)
+      .row()
+      .text(context.t('bundle_get_link_btn'), `bundle_get_link_${bundleId}`)
+      .row()
+      .text(context.t('back_dashboard_btn'), 'manage_bundles');
+
+    await ctx.editMessageText(text, {
+      reply_markup: keyboard,
+      parse_mode: 'Markdown',
+    });
+  } catch (e) {
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
+composer.callbackQuery(/^bundle_add_channel_(\d+)$/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const bundleId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  try {
+    const creator = await creatorService.registerCreator(BigInt(ctx.from!.id));
+    const channels = creator.channels || [];
+
+    let text = context.t('bundle_add_channel_title');
+    const keyboard = new InlineKeyboard();
+
+    if (channels.length === 0) {
+      text = context.t('no_channels');
+    } else {
+      for (const ch of channels) {
+        keyboard
+          .text(`📺 ${ch.title}`, `bundle_add_channel_${bundleId}_${ch.id}`)
+          .row();
+      }
+    }
+
+    keyboard.text(context.t('back_dashboard_btn'), `manage_bundle_${bundleId}`);
+
+    await ctx.editMessageText(text, {
+      reply_markup: keyboard,
+      parse_mode: 'Markdown',
+    });
+  } catch (e) {
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
+composer.callbackQuery(/^bundle_add_channel_(\d+)_(\d+)$/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const bundleId = parseInt(ctx.match[1]);
+  const channelId = parseInt(ctx.match[2]);
+  await ctx.answerCallbackQuery();
+
+  try {
+    await creatorService.addChannelToBundle(
+      BigInt(ctx.from!.id),
+      bundleId,
+      channelId
+    );
+    await ctx.reply(context.t('bundle_channel_added'));
+    await ctx.reply(context.t('bundle_admin_reminder'));
+    await ctx.api.sendMessage(ctx.chat!.id, context.t('bundle_manage_hint'), {
+      reply_markup: new InlineKeyboard().text(
+        context.t('back_dashboard_btn'),
+        `manage_bundle_${bundleId}`
+      ),
+    });
+  } catch (e) {
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
+composer.callbackQuery(/bundle_set_folder_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const bundleId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+  ctx.session.step = 'setting_bundle_folder';
+  ctx.session.tempBundle = { bundleId };
+  await ctx.reply(context.t('bundle_set_folder_prompt'));
+});
+
+composer.callbackQuery(/bundle_add_plan_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const bundleId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+  ctx.session.step = 'creating_bundle_plan_name';
+  ctx.session.tempBundlePlan = { bundleId };
+  await ctx.reply(context.t('bundle_plan_name_prompt'));
+});
+
+composer.callbackQuery(/bundle_get_link_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const bundleId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+  const me = await ctx.api.getMe();
+  const link = `https://t.me/${me.username}?start=b_${bundleId}`;
+
+  try {
+    const bundle = await creatorService.getBundle(
+      BigInt(ctx.from!.id),
+      bundleId
+    );
+
+    let text = context.t('bundle_link_title', { link });
+    if (bundle.folderLink) {
+      text += `\n\n${context.t('bundle_folder_link', {
+        link: bundle.folderLink,
+      })}`;
+    }
+
+    await ctx.reply(text, {
+      parse_mode: 'Markdown',
+      reply_markup: new InlineKeyboard().text(
+        context.t('back_dashboard_btn'),
+        `manage_bundle_${bundleId}`
+      ),
     });
   } catch (e) {
     console.error(e);
@@ -526,6 +727,34 @@ composer.on('message:text', async (ctx, next) => {
     return;
   }
 
+  if (step === 'creating_bundle_title') {
+    const title = ctx.message.text.trim();
+    if (!title) return ctx.reply(context.t('invalid_text'));
+
+    try {
+      const bundle = await creatorService.createBundle(
+        BigInt(ctx.from!.id),
+        title
+      );
+      ctx.session.step = undefined;
+      ctx.session.tempBundle = undefined;
+
+      const keyboard = new InlineKeyboard()
+        .text(context.t('bundle_manage_btn'), `manage_bundle_${bundle.id}`)
+        .row()
+        .text(context.t('back_dashboard_btn'), 'manage_bundles');
+
+      await ctx.reply(context.t('bundle_created', { title }), {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+    } catch (e) {
+      console.error(e);
+      await ctx.reply(context.t('error_loading'));
+    }
+    return;
+  }
+
   if (step === 'creating_plan_price') {
     const price = parseInt(ctx.message.text);
     if (isNaN(price)) return ctx.reply(context.t('invalid_number'));
@@ -570,6 +799,79 @@ composer.on('message:text', async (ctx, next) => {
 
     ctx.session.step = undefined;
     ctx.session.tempPlan = undefined;
+    return;
+  }
+
+  if (step === 'creating_bundle_plan_name') {
+    ctx.session.tempBundlePlan!.name = ctx.message.text;
+    ctx.session.step = 'creating_bundle_plan_price';
+    await ctx.reply(context.t('enter_price'));
+    return;
+  }
+
+  if (step === 'creating_bundle_plan_price') {
+    const price = parseInt(ctx.message.text);
+    if (isNaN(price)) return ctx.reply(context.t('invalid_number'));
+    ctx.session.tempBundlePlan!.price = price;
+    ctx.session.step = 'creating_bundle_plan_duration';
+    await ctx.reply(context.t('enter_duration'));
+    return;
+  }
+
+  if (step === 'creating_bundle_plan_duration') {
+    const days = parseInt(ctx.message.text);
+    if (isNaN(days)) return ctx.reply(context.t('invalid_number'));
+
+    const plan = ctx.session.tempBundlePlan!;
+    if (!plan.bundleId) return ctx.reply(context.t('error_loading'));
+
+    try {
+      await creatorService.createBundlePlan(
+        BigInt(ctx.from!.id),
+        plan.bundleId,
+        plan.name!,
+        plan.price!,
+        days
+      );
+      await ctx.reply(context.t('bundle_plan_created'), {
+        reply_markup: new InlineKeyboard().text(
+          context.t('back_dashboard_btn'),
+          `manage_bundle_${plan.bundleId}`
+        ),
+      });
+    } catch (e) {
+      console.error(e);
+      await ctx.reply(context.t('error_loading'));
+    }
+
+    ctx.session.step = undefined;
+    ctx.session.tempBundlePlan = undefined;
+    return;
+  }
+
+  if (step === 'setting_bundle_folder') {
+    const link = ctx.message.text.trim();
+    if (!link) return ctx.reply(context.t('invalid_text'));
+
+    const bundleId = ctx.session.tempBundle?.bundleId;
+    if (!bundleId) return ctx.reply(context.t('error_loading'));
+
+    try {
+      await creatorService.setBundleFolderLink(
+        BigInt(ctx.from!.id),
+        bundleId,
+        link
+      );
+      await ctx.reply(context.t('bundle_folder_saved'));
+      await ctx.reply(context.t('bundle_admin_reminder'));
+      await ctx.reply(context.t('bundle_cooldown_reminder'));
+    } catch (e) {
+      console.error(e);
+      await ctx.reply(context.t('error_loading'));
+    }
+
+    ctx.session.step = undefined;
+    ctx.session.tempBundle = undefined;
     return;
   }
 

@@ -193,6 +193,101 @@ export class SubscriberService {
     return subRepo.findPlanById(planId);
   }
 
+  async getBundleDetails(bundleId: number) {
+    return prisma.bundle.findUnique({
+      where: { id: bundleId },
+      include: {
+        plans: { where: { isActive: true } },
+        channels: { include: { channel: true } },
+      },
+    });
+  }
+
+  async getBundlePlan(planId: number) {
+    return prisma.bundlePlan.findUnique({
+      where: { id: planId },
+      include: {
+        bundle: {
+          include: {
+            channels: { include: { channel: true } },
+            creator: true,
+          },
+        },
+      },
+    });
+  }
+
+  async activateBundleSubscription(
+    userId: bigint,
+    planId: number,
+    paymentId: string,
+    api: any,
+    userData?: { username?: string; firstName?: string; lastName?: string }
+  ) {
+    const plan = await this.getBundlePlan(planId);
+    if (!plan) throw new Error('Plan not found');
+
+    const bundle = plan.bundle;
+    const channels = bundle.channels.map(item => item.channel);
+
+    const user = await userRepo.upsertUser(
+      userId,
+      userData?.username,
+      userData?.firstName,
+      userData?.lastName
+    );
+
+    const startDate = new Date();
+    const endDate = new Date();
+    endDate.setDate(startDate.getDate() + plan.durationDay);
+
+    const inviteLinks: Array<{
+      channelId: number;
+      channelTitle: string;
+      inviteLink?: string;
+      error?: string;
+    }> = [];
+
+    for (const channel of channels) {
+      try {
+        const invite = await api.createChatInviteLink(
+          Number(channel.telegramChannelId),
+          {
+            member_limit: 1,
+            name: `Bundle ${bundle.id} for ${userId}`,
+          }
+        );
+        inviteLinks.push({
+          channelId: channel.id,
+          channelTitle: channel.title,
+          inviteLink: invite.invite_link,
+        });
+      } catch (err: any) {
+        inviteLinks.push({
+          channelId: channel.id,
+          channelTitle: channel.title,
+          error: err?.description || 'Failed to create invite link',
+        });
+      }
+    }
+
+    const subscription = await prisma.bundleSubscription.create({
+      data: {
+        userId: user.id,
+        planId,
+        bundleId: bundle.id,
+        paymentId,
+        status: 'ACTIVE',
+        startDate,
+        endDate,
+        inviteLinks,
+      },
+      include: { plan: { include: { bundle: true } } },
+    });
+
+    return { subscription, inviteLinks, bundle };
+  }
+
   async requestPartnership(telegramId: bigint, channelId: number) {
     const user = await userRepo.findByTelegramId(telegramId);
     if (!user) throw new Error('User not found');

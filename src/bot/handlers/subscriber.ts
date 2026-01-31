@@ -70,7 +70,7 @@ export async function handleStart(
     return;
   }
 
-  if (!actualPayload || !actualPayload.startsWith('c_')) {
+  if (!actualPayload) {
     // Basic Start (No payload)
     const text = ctx.t('welcome_basic');
     const keyboard = new InlineKeyboard()
@@ -82,6 +82,53 @@ export async function handleStart(
       .text(ctx.t('how_to_sub_btn'), 'how_to_sub');
 
     await ctx.reply(text, { parse_mode: 'Markdown', reply_markup: keyboard });
+    return;
+  }
+
+  if (actualPayload.startsWith('b_')) {
+    const bundleIdString = actualPayload.split('_')[1];
+    const bundleId = parseInt(bundleIdString);
+    if (isNaN(bundleId)) {
+      await ctx.reply(ctx.t('invalid_link'));
+      return;
+    }
+
+    try {
+      const bundle = await subService.getBundleDetails(bundleId);
+      if (!bundle) {
+        await ctx.reply(ctx.t('bundle_not_found'), { parse_mode: 'Markdown' });
+        return;
+      }
+
+      let text = ctx.t('bundle_choose_plan', { title: bundle.title });
+      const keyboard = new InlineKeyboard();
+
+      if (!bundle.plans || bundle.plans.length === 0) {
+        text += ctx.t('no_bundle_plans');
+      } else {
+        for (const plan of bundle.plans) {
+          keyboard
+            .text(
+              ctx.t('buy_plan_btn', {
+                name: plan.name,
+                price: plan.price.toLocaleString(),
+              }),
+              `buy_bundle_plan_${plan.id}`
+            )
+            .row();
+        }
+      }
+
+      await ctx.reply(text, { reply_markup: keyboard, parse_mode: 'Markdown' });
+    } catch (e) {
+      console.error(e);
+      await ctx.reply(ctx.t('error_loading'));
+    }
+    return;
+  }
+
+  if (!actualPayload.startsWith('c_')) {
+    await ctx.reply(ctx.t('invalid_link'));
     return;
   }
 
@@ -337,11 +384,16 @@ composer.callbackQuery(/buy_plan_(\d+)/, async ctx => {
     return;
   }
   const amount = plan.price;
+  if (amount < 1000) {
+    await ctx.reply(context.t('min_payment_error'));
+    return;
+  }
 
   try {
+    const me = await ctx.api.getMe();
     const tx = await tspay.createTransaction(
       amount,
-      'https://t.me/MyBot',
+      `https://t.me/${me.username}`,
       'Plan Purchase'
     );
 
@@ -352,6 +404,50 @@ composer.callbackQuery(/buy_plan_(\d+)/, async ctx => {
       .text(
         context.t('i_have_paid_btn'),
         `check_payment_${tx.transaction.cheque_id}_${planId}`
+      );
+
+    await ctx.reply(
+      context.t('pay_instruction', { amount: amount.toLocaleString() }),
+      { reply_markup: keyboard }
+    );
+  } catch (e) {
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
+// Handle Bundle Plan Buy Button
+composer.callbackQuery(/buy_bundle_plan_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const planId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  const plan = await subService.getBundlePlan(planId);
+  if (!plan) {
+    await ctx.reply(context.t('error_loading'));
+    return;
+  }
+
+  const amount = plan.price;
+  if (amount < 1000) {
+    await ctx.reply(context.t('min_payment_error'));
+    return;
+  }
+
+  try {
+    const me = await ctx.api.getMe();
+    const tx = await tspay.createTransaction(
+      amount,
+      `https://t.me/${me.username}`,
+      'Bundle Purchase'
+    );
+
+    const keyboard = new InlineKeyboard()
+      .url(context.t('pay_now_btn'), tx.transaction.payment_url)
+      .row()
+      .text(
+        context.t('i_have_paid_btn'),
+        `check_bundle_payment_${tx.transaction.cheque_id}_${planId}`
       );
 
     await ctx.reply(
@@ -415,6 +511,70 @@ composer.callbackQuery(/check_payment_(.+)_(\d+)/, async ctx => {
       await ctx.reply(context.t('payment_error'));
     }
   } else {
+    await ctx.reply(context.t('payment_error'));
+  }
+});
+
+composer.callbackQuery(/check_bundle_payment_(.+)_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const txId = ctx.match[1];
+  const planId = parseInt(ctx.match[2]);
+  await ctx.answerCallbackQuery();
+
+  const check = await tspay.checkTransaction(txId);
+  const details = check.data || check.transaction || check;
+  const isPaid =
+    check.status === 'success' &&
+    (details.pay_status === 'paid' || !details.pay_status);
+
+  if (!isPaid) {
+    await ctx.reply(context.t('payment_error'));
+    return;
+  }
+
+  try {
+    const result = await subService.activateBundleSubscription(
+      BigInt(ctx.from!.id),
+      planId,
+      txId,
+      ctx.api,
+      {
+        username: ctx.from?.username,
+        firstName: ctx.from?.first_name,
+        lastName: ctx.from?.last_name,
+      }
+    );
+
+    const plan = await subService.getBundlePlan(planId);
+    if (plan) {
+      await ledgerService.recordBundleTransaction(
+        result.subscription.id,
+        plan.price,
+        plan.bundle.creatorId
+      );
+    }
+
+    let text = context.t('bundle_payment_confirmed');
+
+    for (const link of result.inviteLinks) {
+      if (link.inviteLink) {
+        text += `\n- ${link.channelTitle}: ${link.inviteLink}`;
+      } else {
+        text += `\n- ${link.channelTitle}: ${context.t('bundle_link_failed')}`;
+      }
+    }
+
+    if (result.bundle.folderLink) {
+      text += `\n\n${context.t('bundle_folder_share', {
+        link: result.bundle.folderLink,
+      })}`;
+    }
+
+    text += `\n\n${context.t('bundle_cooldown_reminder')}`;
+
+    await ctx.reply(text, { parse_mode: 'Markdown' });
+  } catch (e) {
+    console.error(e);
     await ctx.reply(context.t('payment_error'));
   }
 });
