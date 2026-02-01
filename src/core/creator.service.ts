@@ -62,9 +62,104 @@ export class CreatorService {
     channelDbId: number,
     name: string,
     price: number,
-    duration: number
+    duration: number,
+    durationUnit: 'days' | 'minutes' = 'days'
   ) {
-    return channelRepo.createPlan(channelDbId, name, price, duration);
+    if (price < 1000) throw new Error('MIN_PRICE');
+    if (durationUnit === 'days') {
+      if (duration < 1) throw new Error('MIN_DAYS');
+      return channelRepo.createPlan(channelDbId, name, price, duration, null);
+    }
+
+    if (duration < 30 || duration > 1440) throw new Error('MIN_MAX_MINUTES');
+    return channelRepo.createPlan(channelDbId, name, price, null, duration);
+  }
+
+  async updatePlan(
+    telegramId: bigint,
+    planId: number,
+    data: { name?: string; price?: number; durationDay?: number; durationMin?: number }
+  ) {
+    const creator = await creatorRepo.findByTelegramId(telegramId);
+    if (!creator) throw new Error('Creator not found');
+
+    const plan = await prisma.subscriptionPlan.findUnique({
+      where: { id: planId },
+      include: { channel: true },
+    });
+
+    if (!plan || plan.channel.creatorId !== creator.id) {
+      throw new Error('Unauthorized or plan not found');
+    }
+
+    if (typeof data.price === 'number' && data.price < 1000) {
+      throw new Error('MIN_PRICE');
+    }
+    if (typeof data.durationDay === 'number' && data.durationDay < 1) {
+      throw new Error('MIN_DAYS');
+    }
+    if (typeof data.durationMin === 'number') {
+      if (data.durationMin < 30 || data.durationMin > 1440) {
+        throw new Error('MIN_MAX_MINUTES');
+      }
+    }
+
+    return prisma.subscriptionPlan.update({
+      where: { id: planId },
+      data: {
+        name: data.name ?? plan.name,
+        price: data.price ?? plan.price,
+        durationDay: data.durationDay ?? plan.durationDay,
+        durationMin: data.durationMin ?? plan.durationMin,
+      },
+    });
+  }
+
+  async setFreeChannel(telegramId: bigint, channelId: number) {
+    const creator = await creatorRepo.findByTelegramId(telegramId);
+    if (!creator) throw new Error('Creator not found');
+
+    const channel = await prisma.channel.findUnique({
+      where: { id: channelId },
+    });
+
+    if (!channel || channel.creatorId !== creator.id) {
+      throw new Error('Channel not found or unauthorized');
+    }
+
+    const existingFree = await prisma.channel.findFirst({
+      where: {
+        creatorId: creator.id,
+        isFree: true,
+        id: { not: channelId },
+      },
+      select: { id: true },
+    });
+
+    if (existingFree) {
+      throw new Error('FREE_CHANNEL_EXISTS');
+    }
+
+    let freePlanId = channel.freePlanId;
+    if (!freePlanId) {
+      const freePlan = await prisma.subscriptionPlan.create({
+        data: {
+          channelId,
+        name: 'Free Access',
+        price: 0,
+        durationDay: 3650,
+      },
+    });
+      freePlanId = freePlan.id;
+    }
+
+    return prisma.channel.update({
+      where: { id: channelId },
+      data: {
+        isFree: true,
+        freePlanId,
+      },
+    });
   }
 
   async getBalance(telegramId: bigint) {
@@ -432,6 +527,8 @@ export class CreatorService {
     durationDay: number
   ) {
     await this.getBundle(telegramId, bundleId);
+    if (price < 1000) throw new Error('MIN_PRICE');
+    if (durationDay < 1) throw new Error('MIN_DAYS');
     return prisma.bundlePlan.create({
       data: {
         bundleId,

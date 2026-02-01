@@ -1,0 +1,8 @@
+﻿{
+    "version":  "1.0",
+    "redis_backup":  "botter_backup_20260201_014104_redis.rdb",
+    "timestamp":  "20260201_014104",
+    "database_backup":  "botter_backup_20260201_014104_database.sql.gz",
+    "created_by":  "windows_backup_script",
+    "backup_name":  "botter_backup_20260201_014104"
+}

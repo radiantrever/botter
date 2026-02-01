@@ -74,7 +74,8 @@ export class SubscriberService {
 
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setDate(startDate.getDate() + plan.durationDay);
+    const days = plan.durationDay ?? 0;
+    endDate.setDate(startDate.getDate() + days);
 
     // 4. Check Referral/Partner
     let partnerId: number | undefined;
@@ -239,7 +240,8 @@ export class SubscriberService {
 
     const startDate = new Date();
     const endDate = new Date();
-    endDate.setDate(startDate.getDate() + plan.durationDay);
+    const days = plan.durationDay ?? 0;
+    endDate.setDate(startDate.getDate() + days);
 
     const inviteLinks: Array<{
       channelId: number;

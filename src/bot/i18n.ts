@@ -41,7 +41,10 @@ export const translations = {
     preview_updated: '✅ Preview {minutes} daqiqaga yoqildi.',
     preview_disabled_msg: "🚫 Ushbu kanal uchun preview o'chirildi.",
     add_plan_btn: "➕ Yangi ta'rif qo'shish",
+    add_hourly_plan_btn: "⏱ Soatlik tarif qo'shish",
+    edit_plans_btn: "✏️ Tariflarni tahrirlash",
     get_link_btn: '🔗 Obuna havolasini olish',
+    free_channel_btn: "🆓 Bepul kanal qilish",
     back_dashboard_btn: '🔙 Panelga qaytish',
     your_link_title:
       '🔗 **Sizning obuna havolangiz:**\n\n`{link}`\n\nUshbu havolani auditoriyangizga ulashing!',
@@ -51,10 +54,55 @@ export const translations = {
     channel_reg_success: "✅ '{title}' kanali muvaffaqiyatli ulandi!",
     create_plan_title:
       "✨ **Yangi ta'rif yaratish**\n\nTa'rif nomini kiriting (masalan, 'Oylik obuna'):",
+    create_hourly_plan_title:
+      "⏱ **Soatlik ta'rif yaratish**\n\nTa'rif nomini kiriting (masalan, '2 soat'):",
     enter_price: 'Narxni kiriting (faqat raqamlarda, masalan: 50000):',
     enter_duration: "Obuna muddatini kunlarda ko'rsating (masalan: 30):",
+    enter_duration_minutes:
+      "Davomiylikni kiriting: `90` (daqiqa) yoki `2h` (soat). Max: 24 soat.",
     plan_created:
       "✅ **Ta'rif yaratildi!**\n\nNomi: {name}\nNarxi: {price} UZS\nMuddati: {days} kun\n\n🔗 **Ulashish uchun havola:**\n`{link}`",
+    plan_created_minutes:
+      "✅ **Ta'rif yaratildi!**\n\nNomi: {name}\nNarxi: {price} UZS\nDavomiyligi: {minutes} daqiqa\n\n🔗 **Ulashish uchun havola:**\n`{link}`",
+    plans_manage_title: "🏷 **Tariflar:** {title}\n\nTahrirlash uchun tarifni tanlang:",
+    no_plans_manage: "Hozircha tariflar yo'q.",
+    edit_plan_name_prompt:
+      "✏️ **Tarif nomi**\n\nYangi nomni yuboring yoki eski nomni qoldirish uchun `-` yuboring.",
+    edit_plan_price_prompt:
+      "✏️ **Tarif narxi**\n\nYangi narxni yuboring yoki eski narxni qoldirish uchun `-` yuboring.",
+    edit_plan_duration_prompt:
+      "✏️ **Tarif muddati**\n\nYangi muddatni (kun) yuboring yoki eski qiymatni qoldirish uchun `-` yuboring.",
+    edit_plan_duration_minutes_prompt:
+      "✏️ **Tarif davomiyligi**\n\n`90` (daqiqa) yoki `2h` (soat) yuboring, yoki `-` bilan eski qiymatni qoldiring.",
+    plan_updated: "✅ **Tarif yangilandi.**",
+    plan_update_note:
+      "ℹ️ O'zgarishlar faqat **joriy obuna tugagandan keyin** yangi obunalar uchun amal qiladi.",
+    plan_updated_notify:
+      "ℹ️ **Tarif yangilandi**\n\nSiz obuna bo'lgan tarif yangilandi.\n\nNomi: {name}\nNarxi: {price} UZS\nMuddati: {duration}\n\nO'zgarishlar sizning joriy obunangiz tugagandan keyin amal qiladi.",
+    duration_days_value: '{days} kun',
+    duration_minutes_value: '{minutes} daqiqa',
+    min_plan_price_error: '❌ **Minimal tarif narxi 1,000 UZS.**',
+    min_plan_days_error: '❌ **Minimal muddat 1 kun.**',
+    min_max_minutes_error:
+      '❌ **Soatlik tarif 30 daqiqadan 1440 daqiqagacha bo‘lishi kerak.**',
+    free_channel_create_btn: "🆓 Bepul kanal yaratish",
+    free_channel_create_prompt:
+      "🆓 **Bepul kanal yaratish**\n\nKanalni botga forward qiling. Bot sizning yagona bepul kanalingiz sifatida ro'yxatdan o'tkazadi.",
+    free_channel_created:
+      "✅ **Bepul kanal yaratildi!**\n\n'{title}' endi bepul kanal.",
+    free_channel_already_registered:
+      "⚠️ Bu kanal oldin ro'yxatdan o'tgan. Bepul kanal faqat yangi kanal sifatida yaratiladi.",
+    free_channel_set:
+      "✅ **Kanal bepul qilindi.** Endi foydalanuvchilar to'lovsiz ulanishlari mumkin.",
+    free_channel_exists:
+      "⚠️ Sizda allaqachon bitta bepul kanal bor. Har bir muallif uchun faqat bitta bepul kanal mumkin.",
+    free_channel_note:
+      "ℹ️ Bepul kanalga ham botni administrator qilib qo'shing.",
+    free_channel_prompt:
+      "🆓 **Bepul kanal:** {title}\n\nQuyidagi tugma orqali kanalda bepul ulaning.",
+    free_channel_join_btn: "🆓 Bepul ulanish",
+    free_channel_joined:
+      "✅ Bepul ulanish tayyor!\n\n[Kanalga ulanish]({link})",
     balance_title:
       "💰 **Sizning balansingiz**\n\nMavjud: {amount} UZS\n\nMablag'ni yechib olish uchun /withdraw <miqdor> buyrug'ini yuboring.",
     wallet_btn: '💰 Hamyon',
@@ -223,7 +271,10 @@ export const translations = {
     preview_updated: '✅ Preview enabled for {minutes} minutes.',
     preview_disabled_msg: '🚫 Preview disabled for this channel.',
     add_plan_btn: '➕ Add Subscription Plan',
+    add_hourly_plan_btn: '⏱ Add Hourly Plan',
+    edit_plans_btn: '✏️ Edit Plans',
     get_link_btn: '🔗 Get Subscription Link',
+    free_channel_btn: '🆓 Make Free Channel',
     back_dashboard_btn: '🔙 Back to Dashboard',
     your_link_title:
       '🔗 **Your Subscription Link:**\n\n`{link}`\n\nShare this link with your audience!',
@@ -233,10 +284,56 @@ export const translations = {
     channel_reg_success: "✅ Channel '{title}' registered successfully!",
     create_plan_title:
       "✨ **Creating a New Plan**\n\nEnter the name of the plan (e.g. 'Standard Access'):",
+    create_hourly_plan_title:
+      "⏱ **Create Hourly Plan**\n\nEnter the plan name (e.g. '2 Hours'):",
     enter_price: 'Enter the price in UZS (e.g. 50000):',
     enter_duration: 'Enter duration in days (e.g. 30):',
+    enter_duration_minutes:
+      'Enter duration like `90` (minutes) or `2h` (hours). Max: 24 hours.',
     plan_created:
       '✅ **Plan Created Successfully!**\n\nName: {name}\nPrice: {price} UZS\nDuration: {days} days\n\n🔗 **Your Shareable Link:**\n`{link}`',
+    plan_created_minutes:
+      '✅ **Plan Created Successfully!**\n\nName: {name}\nPrice: {price} UZS\nDuration: {minutes} minutes\n\n🔗 **Your Shareable Link:**\n`{link}`',
+    plans_manage_title:
+      '🏷 **Plans:** {title}\n\nSelect a plan to edit:',
+    no_plans_manage: 'No plans yet.',
+    edit_plan_name_prompt:
+      "✏️ **Plan name**\n\nSend a new name or send `-` to keep the current one.",
+    edit_plan_price_prompt:
+      "✏️ **Plan price**\n\nSend a new price or send `-` to keep the current one.",
+    edit_plan_duration_prompt:
+      "✏️ **Plan duration**\n\nSend new duration (days) or send `-` to keep the current one.",
+    edit_plan_duration_minutes_prompt:
+      "✏️ **Plan duration**\n\nSend `90` (minutes) or `2h` (hours), or `-` to keep current.",
+    plan_updated: '✅ **Plan updated.**',
+    plan_update_note:
+      "ℹ️ Changes apply to **new subscriptions after current ones end**.",
+    plan_updated_notify:
+      "ℹ️ **Plan updated**\n\nA plan you're subscribed to was updated.\n\nName: {name}\nPrice: {price} UZS\nDuration: {duration}\n\nChanges apply after your current subscription ends.",
+    duration_days_value: '{days} days',
+    duration_minutes_value: '{minutes} minutes',
+    min_plan_price_error: '❌ **Minimum plan price is 1,000 UZS.**',
+    min_plan_days_error: '❌ **Minimum duration is 1 day.**',
+    min_max_minutes_error:
+      '❌ **Hourly plans must be between 30 and 1440 minutes.**',
+    free_channel_create_btn: '🆓 Create Free Channel',
+    free_channel_create_prompt:
+      '🆓 **Create Free Channel**\n\nForward a channel message to this bot. It will be registered as your one free channel.',
+    free_channel_created:
+      "✅ **Free channel created!**\n\n'{title}' is now free.",
+    free_channel_already_registered:
+      '⚠️ This channel is already registered. Free channels must be created as a new channel.',
+    free_channel_set:
+      '✅ **Channel is now free.** Users can join without payment.',
+    free_channel_exists:
+      '⚠️ You already have one free channel. Only one free channel is allowed per creator.',
+    free_channel_note:
+      'ℹ️ Make sure the bot is an admin in the free channel.',
+    free_channel_prompt:
+      '🆓 **Free Channel:** {title}\n\nTap below to join for free.',
+    free_channel_join_btn: '🆓 Join for Free',
+    free_channel_joined:
+      '✅ Free access granted!\n\n[Join Channel]({link})',
     balance_title:
       '💰 **Your Balance**\n\nYou have: {amount} UZS\n\nUse /withdraw <amount> to request a payout.',
     wallet_btn: '💰 Wallet',
@@ -403,7 +500,10 @@ export const translations = {
     preview_updated: '✅ Превью включено на {minutes} минут.',
     preview_disabled_msg: '🚫 Превью для этого канала отключено.',
     add_plan_btn: '➕ Добавить план подписки',
+    add_hourly_plan_btn: '⏱ Добавить почасовой тариф',
+    edit_plans_btn: '✏️ Редактировать тарифы',
     get_link_btn: '🔗 Получить ссылку на подписку',
+    free_channel_btn: '🆓 Сделать канал бесплатным',
     back_dashboard_btn: '🔙 Вернуться в панель',
     your_link_title:
       '🔗 **Ваша ссылка на подписку:**\n\n`{link}`\n\nПоделитесь этой ссылкой со своей аудиторией!',
@@ -413,10 +513,56 @@ export const translations = {
     channel_reg_success: "✅ Канал '{title}' успешно зарегистрирован!",
     create_plan_title:
       "✨ **Создание нового плана**\n\nВведите название плана (например, 'Стандартный доступ'):",
+    create_hourly_plan_title:
+      "⏱ **Создание почасового тарифа**\n\nВведите название тарифа (например, '2 часа'):",
     enter_price: 'Введите цену в UZS (например, 50000):',
     enter_duration: 'Введите длительность в днях (например, 30):',
+    enter_duration_minutes:
+      'Введите длительность: `90` (мин) или `2h` (часы). Макс: 24 часа.',
     plan_created:
       '✅ **План успешно создан!**\n\nНазвание: {name}\nЦена: {price} UZS\nДлительность: {days} дней\n\n🔗 **Ваша ссылка:**\n`{link}`',
+    plan_created_minutes:
+      '✅ **План успешно создан!**\n\nНазвание: {name}\nЦена: {price} UZS\nДлительность: {minutes} минут\n\n🔗 **Ваша ссылка:**\n`{link}`',
+    plans_manage_title:
+      '🏷 **Тарифы:** {title}\n\nВыберите тариф для редактирования:',
+    no_plans_manage: 'Тарифов пока нет.',
+    edit_plan_name_prompt:
+      "✏️ **Название тарифа**\n\nОтправьте новое имя или `-`, чтобы оставить текущее.",
+    edit_plan_price_prompt:
+      "✏️ **Цена тарифа**\n\nОтправьте новую цену или `-`, чтобы оставить текущую.",
+    edit_plan_duration_prompt:
+      "✏️ **Длительность тарифа**\n\nОтправьте новые дни или `-`, чтобы оставить текущее.",
+    edit_plan_duration_minutes_prompt:
+      "✏️ **Длительность тарифа**\n\nОтправьте `90` (мин) или `2h` (часы), либо `-` чтобы оставить текущее.",
+    plan_updated: '✅ **Тариф обновлен.**',
+    plan_update_note:
+      "ℹ️ Изменения применяются к **новым подпискам после окончания текущих**.",
+    plan_updated_notify:
+      "ℹ️ **Тариф обновлен**\n\nТариф, на который вы подписаны, был обновлен.\n\nНазвание: {name}\nЦена: {price} UZS\nДлительность: {duration}\n\nИзменения вступят в силу после окончания текущей подписки.",
+    duration_days_value: '{days} дней',
+    duration_minutes_value: '{minutes} минут',
+    min_plan_price_error: '❌ **Минимальная цена тарифа — 1 000 UZS.**',
+    min_plan_days_error: '❌ **Минимальная длительность — 1 день.**',
+    min_max_minutes_error:
+      '❌ **Почасовой тариф должен быть от 30 до 1440 минут.**',
+    free_channel_create_btn: '🆓 Создать бесплатный канал',
+    free_channel_create_prompt:
+      '🆓 **Создание бесплатного канала**\n\nПерешлите сообщение из канала этому боту. Он зарегистрирует канал как ваш единственный бесплатный.',
+    free_channel_created:
+      "✅ **Бесплатный канал создан!**\n\n'{title}' теперь бесплатный.",
+    free_channel_already_registered:
+      '⚠️ Этот канал уже зарегистрирован. Бесплатный канал создается только как новый.',
+    free_channel_set:
+      '✅ **Канал стал бесплатным.** Пользователи смогут входить без оплаты.',
+    free_channel_exists:
+      '⚠️ У вас уже есть один бесплатный канал. Разрешен только один.',
+    free_channel_note:
+      'ℹ️ Убедитесь, что бот является администратором в бесплатном канале.',
+    free_channel_prompt:
+      '🆓 **Бесплатный канал:** {title}\n\nНажмите ниже, чтобы войти бесплатно.',
+    free_channel_join_btn: '🆓 Войти бесплатно',
+    free_channel_joined:
+      '✅ Доступ получен!\n\n[Войти в канал]({link})',
     balance_title:
       '💰 **Ваш баланс**\n\nДоступно: {amount} UZS\n\nИспользуйте /withdraw <сумма> для запроса выплаты.',
     wallet_btn: '💰 Кошелек',

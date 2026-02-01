@@ -214,6 +214,7 @@ interface SubscriptionPlan {
   channelId: number;
   name: string;
   price: number;
-  durationDay: number;
+  durationDay?: number | null;
+  durationMin?: number | null;
   isActive: boolean;
 }

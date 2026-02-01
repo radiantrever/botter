@@ -4,7 +4,7 @@ import express, { Request, Response } from 'express';
 import healthCheck from './health-check';
 import { Redis } from 'ioredis';
 import { createServer } from 'http';
-import { startExpirationCron } from './workers/expiration';
+import { startDailyAnalyticsCron, startExpirationCron } from './workers/expiration';
 
 async function main() {
   try {
@@ -42,6 +42,7 @@ async function main() {
 
     // Start expiration checker (fail-safe cron)
     startExpirationCron();
+    startDailyAnalyticsCron();
 
     // Start bot
     await startBot();

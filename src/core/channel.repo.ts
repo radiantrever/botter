@@ -33,14 +33,16 @@ export class ChannelRepository {
     channelId: number,
     name: string,
     price: number,
-    durationDay: number
+    durationDay?: number | null,
+    durationMin?: number | null
   ) {
     return prisma.subscriptionPlan.create({
       data: {
         channelId,
         name,
         price,
-        durationDay,
+        durationDay: durationDay ?? null,
+        durationMin: durationMin ?? null,
       },
     });
   }

@@ -146,6 +146,17 @@ export async function handleStart(
       return;
     }
 
+    if (channel.isFree) {
+      const text = ctx.t('free_channel_prompt', { title: channel.title });
+      const keyboard = new InlineKeyboard()
+        .text(ctx.t('free_channel_join_btn'), `join_free_${channel.id}`)
+        .row()
+        .text(ctx.t('partner_apply_btn'), `apply_partner_${channel.id}`);
+
+      await ctx.reply(text, { reply_markup: keyboard, parse_mode: 'Markdown' });
+      return;
+    }
+
     // Display Plans & Partner Option
     let text = ctx.t('choose_plan', { title: channel.title });
     const keyboard = new InlineKeyboard();
@@ -216,6 +227,54 @@ composer.callbackQuery(/apply_partner_(\d+)/, async ctx => {
     } else {
       await ctx.reply(context.t('partner_request_exists'));
     }
+  } catch (e) {
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
+composer.callbackQuery(/join_free_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const channelId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  try {
+    const channel = await subService.getChannelDetails(channelId);
+    if (!channel) {
+      await ctx.reply(context.t('channel_not_found'), { parse_mode: 'Markdown' });
+      return;
+    }
+
+    if (!channel.isFree || !channel.freePlanId) {
+      await ctx.reply(context.t('error_loading'));
+      return;
+    }
+
+    const already = await subService.getSubscription(
+      BigInt(ctx.from!.id),
+      channelId
+    );
+    if (already) {
+      await ctx.reply(context.t('preview_already_subscribed'));
+      return;
+    }
+
+    const sub = await subService.activateSubscription(
+      BigInt(ctx.from!.id),
+      channel.freePlanId,
+      'FREE',
+      ctx.api,
+      {
+        username: ctx.from?.username,
+        firstName: ctx.from?.first_name,
+        lastName: ctx.from?.last_name,
+      }
+    );
+
+    await ctx.reply(
+      context.t('free_channel_joined', { link: sub.inviteLink }),
+      { parse_mode: 'Markdown' }
+    );
   } catch (e) {
     console.error(e);
     await ctx.reply(context.t('error_loading'));

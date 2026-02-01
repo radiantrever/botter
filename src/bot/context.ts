@@ -10,6 +10,14 @@ export interface SessionData {
     name?: string;
     price?: number;
     duration?: number;
+    durationUnit?: 'days' | 'minutes';
+  };
+  tempEditPlan?: {
+    planId?: number;
+    name?: string | null;
+    price?: number | null;
+    duration?: number | null;
+    durationUnit?: 'days' | 'minutes';
   };
   tempBundle?: {
     bundleId?: number;

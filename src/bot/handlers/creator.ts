@@ -4,6 +4,36 @@ import { CreatorService } from '../../core/creator.service';
 // import { LedgerService } from '../../core/ledger.service';
 import { SubscriberService } from '../../core/subscriber.service';
 import { MyContextWithI18n } from '../i18nMiddleware';
+import prisma from '../../db/prisma';
+import { t } from '../i18n';
+
+function parseDurationMinutesInput(input: string): number | null {
+  const text = input.trim().toLowerCase();
+  if (!text) return null;
+
+  if (text.endsWith('m')) {
+    const value = parseInt(text.slice(0, -1).trim());
+    return Number.isNaN(value) ? null : value;
+  }
+
+  if (text.endsWith('min') || text.endsWith('mins')) {
+    const value = parseInt(text.replace(/mins?$/, '').trim());
+    return Number.isNaN(value) ? null : value;
+  }
+
+  if (text.endsWith('h')) {
+    const value = parseFloat(text.slice(0, -1).trim());
+    return Number.isNaN(value) ? null : Math.round(value * 60);
+  }
+
+  if (text.endsWith('hour') || text.endsWith('hours')) {
+    const value = parseFloat(text.replace(/hours?$/, '').trim());
+    return Number.isNaN(value) ? null : Math.round(value * 60);
+  }
+
+  const value = parseInt(text);
+  return Number.isNaN(value) ? null : value;
+}
 // import { handleStart } from './subscriber';
 
 const composer = new Composer<MyContext>();
@@ -56,6 +86,10 @@ composer.callbackQuery(/manage_channel_(\d+)/, async ctx => {
   const keyboard = new InlineKeyboard()
     .text(context.t('add_plan_btn'), `create_plan_${channelId}`)
     .row()
+    .text(context.t('add_hourly_plan_btn'), `create_hourly_plan_${channelId}`)
+    .row()
+    .text(context.t('edit_plans_btn'), `manage_plans_${channelId}`)
+    .row()
     .text(context.t('get_link_btn'), `get_link_${channelId}`)
     .row()
     .text(context.t('preview_settings_btn'), `preview_settings_${channelId}`)
@@ -64,6 +98,65 @@ composer.callbackQuery(/manage_channel_(\d+)/, async ctx => {
 
   await ctx.editMessageText(text, {
     reply_markup: keyboard,
+    parse_mode: 'Markdown',
+  });
+});
+
+composer.callbackQuery(/manage_plans_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const channelId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  try {
+    const creator = await creatorService.registerCreator(BigInt(ctx.from!.id));
+    const channel = await subService.getChannelDetails(channelId);
+    if (!channel || channel.creatorId !== creator.id) {
+      return ctx.reply(context.t('channel_not_found'));
+    }
+
+    let text = context.t('plans_manage_title', { title: channel.title });
+    const keyboard = new InlineKeyboard();
+
+    if (!channel.plans || channel.plans.length === 0) {
+      text += `\n\n${context.t('no_plans_manage')}`;
+    } else {
+      for (const plan of channel.plans) {
+        keyboard.text(`🏷 ${plan.name}`, `edit_plan_${plan.id}`).row();
+      }
+    }
+
+    keyboard.text(context.t('back_dashboard_btn'), `manage_channel_${channelId}`);
+
+    await ctx.editMessageText(text, {
+      reply_markup: keyboard,
+      parse_mode: 'Markdown',
+    });
+  } catch (e) {
+    console.error(e);
+    await ctx.reply(context.t('error_loading'));
+  }
+});
+
+composer.callbackQuery(/edit_plan_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const planId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  const plan = await prisma.subscriptionPlan.findUnique({
+    where: { id: planId },
+  });
+  const durationUnit = plan?.durationMin ? 'minutes' : 'days';
+
+  ctx.session.step = 'editing_plan_name';
+  ctx.session.tempEditPlan = { planId, durationUnit };
+  await ctx.reply(context.t('edit_plan_name_prompt'), { parse_mode: 'Markdown' });
+});
+
+composer.callbackQuery('create_free_channel', async ctx => {
+  const context = ctx as MyContextWithI18n;
+  await ctx.answerCallbackQuery();
+  ctx.session.step = 'creating_free_channel';
+  await ctx.reply(context.t('free_channel_create_prompt'), {
     parse_mode: 'Markdown',
   });
 });
@@ -90,6 +183,7 @@ composer.callbackQuery('dashboard', async ctx => {
   keyboard.text(context.t('wallet_btn'), 'wallet').row();
   keyboard.text(context.t('analytics_btn'), 'analytics').row();
   keyboard.text(context.t('manage_partners_btn'), 'manage_partners').row();
+  keyboard.text(context.t('free_channel_create_btn'), 'create_free_channel').row();
   keyboard.text(context.t('add_channel_btn'), 'add_channel_info').row();
   keyboard.text(context.t('bundles_btn'), 'manage_bundles').row();
   keyboard.text(context.t('main_menu_btn'), 'main_menu').row();
@@ -685,11 +779,39 @@ composer.on('message:forward_origin:channel', async ctx => {
     );
     if (!creator) throw new Error('Could not register creator.');
 
+    const existed = creator.channels.some(
+      (c: any) => Number(c.telegramChannelId) === Number(channelId)
+    );
+
     const channel = await creatorService.registerChannel(
       creator.userId,
       BigInt(channelId),
       title
     );
+
+    if (ctx.session.step === 'creating_free_channel') {
+      if (existed) {
+        await ctx.reply(context.t('free_channel_already_registered'));
+        ctx.session.step = undefined;
+        return;
+      }
+      try {
+        await creatorService.setFreeChannel(BigInt(ctx.from.id), channel.id);
+        await ctx.reply(context.t('free_channel_created', { title }), {
+          parse_mode: 'Markdown',
+        });
+        await ctx.reply(context.t('free_channel_note'));
+      } catch (e: any) {
+        if (e?.message === 'FREE_CHANNEL_EXISTS') {
+          await ctx.reply(context.t('free_channel_exists'));
+        } else {
+          throw e;
+        }
+      } finally {
+        ctx.session.step = undefined;
+      }
+      return;
+    }
 
     const keyboard = new InlineKeyboard()
       .text(context.t('add_plan_btn'), `create_plan_${channel.id}`)
@@ -711,8 +833,20 @@ composer.callbackQuery(/create_plan_(\d+)/, async ctx => {
   await ctx.answerCallbackQuery();
 
   ctx.session.step = 'creating_plan_name';
-  ctx.session.tempPlan = { channelId };
+  ctx.session.tempPlan = { channelId, durationUnit: 'days' };
   await ctx.reply(context.t('create_plan_title'), { parse_mode: 'Markdown' });
+});
+
+composer.callbackQuery(/create_hourly_plan_(\d+)/, async ctx => {
+  const context = ctx as MyContextWithI18n;
+  const channelId = parseInt(ctx.match[1]);
+  await ctx.answerCallbackQuery();
+
+  ctx.session.step = 'creating_plan_name';
+  ctx.session.tempPlan = { channelId, durationUnit: 'minutes' };
+  await ctx.reply(context.t('create_hourly_plan_title'), {
+    parse_mode: 'Markdown',
+  });
 });
 
 composer.on('message:text', async (ctx, next) => {
@@ -724,6 +858,17 @@ composer.on('message:text', async (ctx, next) => {
     ctx.session.tempPlan!.name = ctx.message.text;
     ctx.session.step = 'creating_plan_price';
     await ctx.reply(context.t('enter_price'));
+    return;
+  }
+
+  if (step === 'editing_plan_name') {
+    const text = ctx.message.text.trim();
+    ctx.session.tempEditPlan!.name =
+      text === '-' || text.toLowerCase() === 'skip' ? null : text;
+    ctx.session.step = 'editing_plan_price';
+    await ctx.reply(context.t('edit_plan_price_prompt'), {
+      parse_mode: 'Markdown',
+    });
     return;
   }
 
@@ -748,9 +893,17 @@ composer.on('message:text', async (ctx, next) => {
         parse_mode: 'Markdown',
         reply_markup: keyboard,
       });
-    } catch (e) {
-      console.error(e);
-      await ctx.reply(context.t('error_loading'));
+    } catch (e: any) {
+      if (e?.message === 'MIN_PRICE') {
+        await ctx.reply(context.t('min_plan_price_error'));
+      } else if (e?.message === 'MIN_DAYS') {
+        await ctx.reply(context.t('min_plan_days_error'));
+      } else if (e?.message === 'MIN_MAX_MINUTES') {
+        await ctx.reply(context.t('min_max_minutes_error'));
+      } else {
+        console.error(e);
+        await ctx.reply(context.t('error_loading'));
+      }
     }
     return;
   }
@@ -760,45 +913,176 @@ composer.on('message:text', async (ctx, next) => {
     if (isNaN(price)) return ctx.reply(context.t('invalid_number'));
     ctx.session.tempPlan!.price = price;
     ctx.session.step = 'creating_plan_duration';
-    await ctx.reply(context.t('enter_duration'));
+    if (ctx.session.tempPlan?.durationUnit === 'minutes') {
+      await ctx.reply(context.t('enter_duration_minutes'), {
+        parse_mode: 'Markdown',
+      });
+    } else {
+      await ctx.reply(context.t('enter_duration'));
+    }
+    return;
+  }
+
+  if (step === 'editing_plan_price') {
+    const text = ctx.message.text.trim();
+    if (text === '-' || text.toLowerCase() === 'skip') {
+      ctx.session.tempEditPlan!.price = null;
+    } else {
+      const price = parseInt(text);
+      if (isNaN(price)) return ctx.reply(context.t('invalid_number'));
+      if (price < 1000)
+        return ctx.reply(context.t('min_plan_price_error'), {
+          parse_mode: 'Markdown',
+        });
+      ctx.session.tempEditPlan!.price = price;
+    }
+    ctx.session.step = 'editing_plan_duration';
+    const durationKey =
+      ctx.session.tempEditPlan?.durationUnit === 'minutes'
+        ? 'edit_plan_duration_minutes_prompt'
+        : 'edit_plan_duration_prompt';
+    await ctx.reply(context.t(durationKey), { parse_mode: 'Markdown' });
     return;
   }
 
   if (step === 'creating_plan_duration') {
-    const days = parseInt(ctx.message.text);
-    if (isNaN(days)) return ctx.reply(context.t('invalid_number'));
-
     const plan = ctx.session.tempPlan!;
+    const isMinutes = plan.durationUnit === 'minutes';
+    const value = isMinutes
+      ? parseDurationMinutesInput(ctx.message.text)
+      : parseInt(ctx.message.text);
+
+    if (value === null || Number.isNaN(value)) {
+      return ctx.reply(context.t('invalid_number'));
+    }
 
     // Save Plan using service
-    const newPlan = await creatorService.createPlan(
-      plan.channelId!,
-      plan.name!,
-      plan.price!,
-      days
-    );
+    try {
+      const newPlan = await creatorService.createPlan(
+        plan.channelId!,
+        plan.name!,
+        plan.price!,
+        value,
+        isMinutes ? 'minutes' : 'days'
+      );
 
-    const me = await ctx.api.getMe();
-    const link = `https://t.me/${me.username}?start=c_${plan.channelId}`;
+      const me = await ctx.api.getMe();
+      const link = `https://t.me/${me.username}?start=c_${plan.channelId}`;
 
-    await ctx.reply(
-      context.t('plan_created', {
-        name: newPlan.name,
-        price: newPlan.price.toLocaleString(),
-        days,
-        link,
-      }),
-      {
-        parse_mode: 'Markdown',
-        reply_markup: new InlineKeyboard().text(
-          context.t('go_dashboard_btn'),
-          'dashboard'
-        ),
+      const messageKey = isMinutes
+        ? 'plan_created_minutes'
+        : 'plan_created';
+
+      await ctx.reply(
+        context.t(messageKey, {
+          name: newPlan.name,
+          price: newPlan.price.toLocaleString(),
+          days: value,
+          minutes: value,
+          link,
+        }),
+        {
+          parse_mode: 'Markdown',
+          reply_markup: new InlineKeyboard().text(
+            context.t('go_dashboard_btn'),
+            'dashboard'
+          ),
+        }
+      );
+    } catch (e: any) {
+      if (e?.message === 'MIN_PRICE') {
+        await ctx.reply(context.t('min_plan_price_error'));
+      } else if (e?.message === 'MIN_DAYS') {
+        await ctx.reply(context.t('min_plan_days_error'));
+      } else if (e?.message === 'MIN_MAX_MINUTES') {
+        await ctx.reply(context.t('min_max_minutes_error'));
+      } else {
+        console.error(e);
+        await ctx.reply(context.t('error_loading'));
       }
-    );
+    }
 
     ctx.session.step = undefined;
     ctx.session.tempPlan = undefined;
+    return;
+  }
+
+  if (step === 'editing_plan_duration') {
+    const text = ctx.message.text.trim();
+    if (text === '-' || text.toLowerCase() === 'skip') {
+      ctx.session.tempEditPlan!.duration = null;
+    } else {
+      if (ctx.session.tempEditPlan?.durationUnit === 'minutes') {
+        const minutes = parseDurationMinutesInput(text);
+        if (minutes === null || Number.isNaN(minutes)) {
+          return ctx.reply(context.t('invalid_number'));
+        }
+        ctx.session.tempEditPlan!.duration = minutes;
+      } else {
+        const days = parseInt(text);
+        if (isNaN(days)) return ctx.reply(context.t('invalid_number'));
+        ctx.session.tempEditPlan!.duration = days;
+      }
+    }
+
+    const payload = ctx.session.tempEditPlan!;
+    if (!payload.planId) return ctx.reply(context.t('error_loading'));
+
+    try {
+      const updatedPlan = await creatorService.updatePlan(
+        BigInt(ctx.from!.id),
+        payload.planId,
+        {
+          name: payload.name ?? undefined,
+          price: payload.price ?? undefined,
+          durationDay:
+            payload.durationUnit === 'minutes' ? undefined : payload.duration ?? undefined,
+          durationMin:
+            payload.durationUnit === 'minutes' ? payload.duration ?? undefined : undefined,
+        }
+      );
+      await ctx.reply(context.t('plan_updated'), { parse_mode: 'Markdown' });
+      await ctx.reply(context.t('plan_update_note'), { parse_mode: 'Markdown' });
+
+      const subs = await prisma.subscription.findMany({
+        where: {
+          planId: updatedPlan.id,
+          status: 'ACTIVE',
+          endDate: { gt: new Date() },
+        },
+        include: { user: true },
+      });
+
+      for (const sub of subs) {
+        const lang = (sub.user.language as any) || 'en';
+        const durationText =
+          updatedPlan.durationMin && updatedPlan.durationMin > 0
+            ? t(lang, 'duration_minutes_value', {
+                minutes: updatedPlan.durationMin.toLocaleString(),
+              })
+            : t(lang, 'duration_days_value', {
+                days: (updatedPlan.durationDay ?? 0).toLocaleString(),
+              });
+        const message = t(lang, 'plan_updated_notify', {
+          name: updatedPlan.name,
+          price: updatedPlan.price.toLocaleString(),
+          duration: durationText,
+        });
+        try {
+          await ctx.api.sendMessage(Number(sub.user.telegramId), message, {
+            parse_mode: 'Markdown',
+          });
+        } catch (err) {
+          console.error('Failed to notify subscriber:', err);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+      await ctx.reply(context.t('error_loading'));
+    }
+
+    ctx.session.step = undefined;
+    ctx.session.tempEditPlan = undefined;
     return;
   }
 
@@ -839,9 +1123,15 @@ composer.on('message:text', async (ctx, next) => {
           `manage_bundle_${plan.bundleId}`
         ),
       });
-    } catch (e) {
-      console.error(e);
-      await ctx.reply(context.t('error_loading'));
+    } catch (e: any) {
+      if (e?.message === 'MIN_PRICE') {
+        await ctx.reply(context.t('min_plan_price_error'));
+      } else if (e?.message === 'MIN_DAYS') {
+        await ctx.reply(context.t('min_plan_days_error'));
+      } else {
+        console.error(e);
+        await ctx.reply(context.t('error_loading'));
+      }
     }
 
     ctx.session.step = undefined;

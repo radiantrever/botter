@@ -43,6 +43,8 @@ model Channel {
   commissionRate     Float   @default(0.05) // Our platform fee (default 5%)
   previewEnabled     Boolean @default(false)
   previewDurationMin Int     @default(0)
+  isFree             Boolean @default(false)
+  freePlanId         Int?
 
   plans           SubscriptionPlan[]
   subscriptions   Subscription[]
@@ -148,7 +150,8 @@ model SubscriptionPlan {
 
   name        String // e.g., "Monthly Access"
   price       Int // In UZS (Uzbek Soum)
-  durationDay Int // Duration in days
+  durationDay Int? // Duration in days
+  durationMin Int? // Duration in minutes (30-1440) for hourly access
   isActive    Boolean @default(true)
 
   subscriptions Subscription[]

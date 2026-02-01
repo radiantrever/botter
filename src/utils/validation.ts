@@ -16,6 +16,7 @@ export const planIdSchema = z.number().int().positive();
 export const amountSchema = z.number().int().positive().min(1000); // Minimum amount in UZS
 
 export const durationSchema = z.number().int().positive().max(365); // Max 1 year
+export const durationMinutesSchema = z.number().int().min(30).max(1440);
 
 export const cardNumberSchema = z
   .string()
@@ -52,7 +53,8 @@ export const channelRegistrationSchema = z.object({
 export const subscriptionPlanSchema = z.object({
   name: z.string().min(1).max(100),
   price: amountSchema,
-  durationDay: durationSchema,
+  durationDay: durationSchema.optional(),
+  durationMin: durationMinutesSchema.optional(),
 });
 
 // Validation function
