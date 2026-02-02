@@ -74,8 +74,13 @@ export class SubscriberService {
 
     const startDate = new Date();
     const endDate = new Date();
-    const days = plan.durationDay ?? 0;
-    endDate.setDate(startDate.getDate() + days);
+    if (plan.durationMin && plan.durationMin > 0) {
+      endDate.setMinutes(endDate.getMinutes() + plan.durationMin);
+    } else if (plan.durationDay && plan.durationDay > 0) {
+      endDate.setDate(startDate.getDate() + plan.durationDay);
+    } else {
+      throw new Error('INVALID_PLAN_DURATION');
+    }
 
     // 4. Check Referral/Partner
     let partnerId: number | undefined;
@@ -240,8 +245,11 @@ export class SubscriberService {
 
     const startDate = new Date();
     const endDate = new Date();
-    const days = plan.durationDay ?? 0;
-    endDate.setDate(startDate.getDate() + days);
+    if (plan.durationDay && plan.durationDay > 0) {
+      endDate.setDate(startDate.getDate() + plan.durationDay);
+    } else {
+      throw new Error('INVALID_PLAN_DURATION');
+    }
 
     const inviteLinks: Array<{
       channelId: number;

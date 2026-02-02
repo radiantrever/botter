@@ -42,8 +42,10 @@ export class SubscriptionRepository {
 
   async findSubscriptionsForReminder(daysRemaining: number) {
     const now = new Date();
-    const reminderDate = new Date();
-    reminderDate.setDate(now.getDate() + daysRemaining);
+    const startWindow = new Date();
+    startWindow.setDate(now.getDate() + (daysRemaining - 1));
+    const endWindow = new Date();
+    endWindow.setDate(now.getDate() + daysRemaining);
 
     // Window of 1 hour to avoid missing someone but also avoid spamming if cron runs multiple times
     // Actually, we use flags (reminded1d, reminded3d) to ensure exactly once.
@@ -52,7 +54,8 @@ export class SubscriptionRepository {
     return prisma.subscription.findMany({
       where: {
         status: 'ACTIVE',
-        endDate: { lte: reminderDate },
+        endDate: { gt: now, gte: startWindow, lte: endWindow },
+        plan: { durationMin: null },
         [flagField]: false,
       },
       include: { user: true, plan: { include: { channel: true } } },
