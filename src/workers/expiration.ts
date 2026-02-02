@@ -238,7 +238,8 @@ async function sendDailyAnalyticsReport(now: Date) {
 
   const parts = getTashkentParts(now);
   const dateKey = `${parts.year}-${String(parts.month).padStart(2, '0')}-${String(parts.day).padStart(2, '0')}`;
-  const isReportHour = (parts.hour === 6 || parts.hour === 18) && parts.minute === 0;
+  const isReportHour =
+    (parts.hour === 6 || parts.hour === 18) && parts.minute <= 5;
   if (!isReportHour) return;
 
   const runKey = `${dateKey}-${String(parts.hour).padStart(2, '0')}`;
